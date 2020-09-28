@@ -39,7 +39,10 @@ class Shopee extends Component {
         "https://shopee.vn/api/v2/item/get?itemid=" +
         itemId +
         "&shopid=" +
-        shopId
+        shopId,
+      {
+        cache: "no-store",
+      }
     )
       .then((response) => response.json())
       .then((data) => {
