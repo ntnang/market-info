@@ -27,36 +27,14 @@ class Tiki extends Component {
     );
   }
   getProductInformation = () => {
-    if (this.state.link.search("tiki")) {
-      let start = this.state.link.lastIndexOf("-p") + 2;
-      let end = this.state.link.search(".html");
-      let productId = this.state.link.substring(start, end);
-      fetch("https://tiki.vn//api/v2/products/" + productId)
-        .then((response) => response.json())
-        .then((product) => {
-          this.setState({ product });
-        });
-    } else if (this.state.link.search("shopee")) {
-      let start = this.state.link.lastIndexOf("-i") + 2;
-      let end = this.state.link.length;
-      let idStr = this.state.link.substring(start, end);
-      let ids = idStr.split(".");
-      let itemId = ids[0];
-      let shopId = ids[1];
-      fetch(
-        "https://shopee.vn/api/v2/item/get?itemid=" +
-          itemId +
-          "&shopid=" +
-          shopId,
-        {
-          cache: "no-store",
-        }
-      )
-        .then((response) => response.json())
-        .then((product) => {
-          this.setState({ product });
-        });
-    }
+    let start = this.state.link.lastIndexOf("-p") + 2;
+    let end = this.state.link.search(".html");
+    let productId = this.state.link.substring(start, end);
+    fetch("https://tiki.vn//api/v2/products/" + productId)
+      .then((response) => response.json())
+      .then((product) => {
+        this.setState({ product });
+      });
   };
   onInputValueChanged = (event) => {
     this.setState({ link: event.target.value });
