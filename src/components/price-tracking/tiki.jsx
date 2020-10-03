@@ -7,6 +7,18 @@ class Tiki extends Component {
       id: 0,
       name: "",
       price: 0,
+      thumbnail_url: "",
+      current_seller: {
+        id: 0,
+        store_id: 0,
+        name: "",
+        slug: "",
+        sku: 0,
+        price: "",
+        logo: "",
+        product_id: "",
+      },
+      other_sellers: {},
     },
   };
   render() {
@@ -23,6 +35,9 @@ class Tiki extends Component {
         <div>{this.state.product.id}</div>
         <div>{this.state.product.name}</div>
         <div>{this.state.product.price}</div>
+        <img src={this.state.product.thumbnail_url} />
+        <div>{this.state.product.current_seller.name}</div>
+        <img src={this.state.product.current_seller.logo} />
       </div>
     );
   }
