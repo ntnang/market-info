@@ -1,7 +1,5 @@
 import React, { Component } from "react";
 import "./App.css";
-import NavBar from "./components/navbar";
-import Counters from "./components/counters";
 import Tiki from "./components/price-tracking/tiki";
 import Shopee from "./components/price-tracking/shopee";
 
@@ -37,15 +35,6 @@ class App extends Component {
   render() {
     return (
       <React.Fragment>
-        {/* <NavBar
-          totalCounters={this.state.counters.filter((c) => c.value > 0).length}
-        />
-        <Counters
-          counters={this.state.counters}
-          onReset={this.handleReset}
-          onIncrement={this.handleIncrement}
-          onDelete={this.handleDelete}
-        /> */}
         <Tiki />
         <Shopee />
       </React.Fragment>
