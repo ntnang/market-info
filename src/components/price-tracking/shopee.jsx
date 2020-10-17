@@ -34,16 +34,9 @@ class Shopee extends Component {
     const ids = idStr.split(".");
     const itemId = ids[2];
     const shopId = ids[1];
-    fetch(
-      proxy +
-        "https://shopee.vn/api/v2/item/get?itemid=" +
-        itemId +
-        "&shopid=" +
-        shopId,
-      {
-        cache: "no-store",
-      }
-    )
+    const endPoint = `${proxy}https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
+    const localEndPoint = `http://localhost:3001/api/shopee/${itemId}/${shopId}`;
+    fetch(localEndPoint, { mode: "cors" })
       .then((response) => response.json())
       .then((data) => {
         this.setState({ item: data.item });
