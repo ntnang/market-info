@@ -20,6 +20,12 @@ class Shopee extends Component {
         >
           Get
         </button>
+        <button
+          onClick={() => this.trackProductInformation()}
+          className="btn btn-secondary btn-sm"
+        >
+          Track
+        </button>
         <div>{this.state.item.itemid}</div>
         <div>{this.state.item.name}</div>
         <div>{this.state.item.price_max}</div>
@@ -35,13 +41,28 @@ class Shopee extends Component {
     const itemId = ids[2];
     const shopId = ids[1];
     const endPoint = `${proxy}https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
-    const localEndPoint = `http://localhost:3001/api/shopee/${itemId}/${shopId}`;
-    fetch(localEndPoint, { mode: "cors" })
+    fetch(endPoint)
       .then((response) => response.json())
       .then((data) => {
         this.setState({ item: data.item });
       });
   };
+
+  trackProductInformation = () => {
+    const start = this.state.link.lastIndexOf("-i") + 2;
+    const end = this.state.link.length;
+    const idStr = this.state.link.substring(start, end);
+    const ids = idStr.split(".");
+    const itemId = ids[2];
+    const shopId = ids[1];
+    const localEndPoint = `http://localhost:3001/api/shopee/${itemId}/${shopId}`;
+    fetch(localEndPoint)
+      .then((response) => response.json())
+      .then((data) => {
+        this.setState({ item: data.item });
+      });
+  };
+
   onInputValueChanged = (event) => {
     this.setState({ link: event.target.value });
   };
