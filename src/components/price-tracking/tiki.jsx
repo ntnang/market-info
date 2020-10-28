@@ -4,16 +4,16 @@ class Tiki extends Component {
   state = {
     link: "",
     product: {
-      id: 0,
+      id: "",
       name: "",
       price: 0,
       thumbnail_url: "",
       current_seller: {
-        id: 0,
-        store_id: 0,
+        id: "",
+        store_id: "",
         name: "",
         slug: "",
-        sku: 0,
+        sku: "",
         price: "",
         logo: "",
         product_id: "",
@@ -31,6 +31,12 @@ class Tiki extends Component {
           className="btn btn-secondary btn-sm"
         >
           Get
+        </button>
+        <button
+          onClick={() => this.trackProductInformation()}
+          className="btn btn-secondary btn-sm"
+        >
+          Track
         </button>
         <div>{this.state.product.id}</div>
         <div>{this.state.product.name}</div>
@@ -51,6 +57,7 @@ class Tiki extends Component {
         this.setState({ product });
       });
   };
+  trackProductInformation = () => {};
   onInputValueChanged = (event) => {
     this.setState({ link: event.target.value });
   };

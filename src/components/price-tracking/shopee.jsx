@@ -4,7 +4,8 @@ class Shopee extends Component {
   state = {
     link: "",
     item: {
-      itemid: 0,
+      itemid: "",
+      shopid: "",
       name: "",
       price_max: 0,
     },
@@ -59,7 +60,7 @@ class Shopee extends Component {
     fetch(localEndPoint)
       .then((response) => response.json())
       .then((data) => {
-        this.setState({ item: data.item });
+        this.setState({ item: data });
       });
   };
 
