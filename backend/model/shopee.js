@@ -5,6 +5,7 @@ const shopeeSchema = mongoose.Schema({
   shopid: String,
   name: String,
   price_max: Number,
+  trackedDate: Date,
 });
 
 module.exports = mongoose.model("Shopee", shopeeSchema);

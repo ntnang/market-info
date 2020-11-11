@@ -18,7 +18,6 @@ class Tiki extends Component {
         logo: "",
         product_id: "",
       },
-      other_sellers: {},
     },
   };
   render() {
@@ -48,16 +47,25 @@ class Tiki extends Component {
     );
   }
   getProductInformation = () => {
-    let start = this.state.link.lastIndexOf("-p") + 2;
-    let end = this.state.link.search(".html");
-    let productId = this.state.link.substring(start, end);
-    fetch("https://tiki.vn//api/v2/products/" + productId)
+    const start = this.state.link.lastIndexOf("-p") + 2;
+    const end = this.state.link.search(".html");
+    const productId = this.state.link.substring(start, end);
+    fetch(`https://tiki.vn/api/v2/products/${productId}`)
       .then((response) => response.json())
       .then((product) => {
         this.setState({ product });
       });
   };
-  trackProductInformation = () => {};
+  trackProductInformation = () => {
+    const start = this.state.link.lastIndexOf("-p") + 2;
+    const end = this.state.link.search(".html");
+    const productId = this.state.link.substring(start, end);
+    fetch(`http://localhost:3001/api/tiki/${productId}`)
+      .then((response) => response.json())
+      .then((product) => {
+        this.setState({ product });
+      });
+  };
   onInputValueChanged = (event) => {
     this.setState({ link: event.target.value });
   };

@@ -34,14 +34,13 @@ class Shopee extends Component {
     );
   }
   getProductInformation = () => {
-    const proxy = "https://cors-anywhere.herokuapp.com/"; // use this proxy api to bypass the cors (cross-origin resource sharing) problem, see more https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSAllowOriginNotMatchingOrigin
     const start = this.state.link.lastIndexOf("-i") + 2;
     const end = this.state.link.length;
     const idStr = this.state.link.substring(start, end);
     const ids = idStr.split(".");
     const itemId = ids[2];
     const shopId = ids[1];
-    const endPoint = `${proxy}https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
+    const endPoint = `http://localhost:3001/api/shopee/get/${itemId}/${shopId}`;
     fetch(endPoint)
       .then((response) => response.json())
       .then((data) => {
@@ -56,7 +55,7 @@ class Shopee extends Component {
     const ids = idStr.split(".");
     const itemId = ids[2];
     const shopId = ids[1];
-    const localEndPoint = `http://localhost:3001/api/shopee/${itemId}/${shopId}`;
+    const localEndPoint = `http://localhost:3001/api/shopee/track/${itemId}/${shopId}`;
     fetch(localEndPoint)
       .then((response) => response.json())
       .then((data) => {
