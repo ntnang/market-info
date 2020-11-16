@@ -34,6 +34,7 @@ class Shopee extends Component {
     );
   }
   getProductInformation = () => {
+    // use the proxy https://cors-anywhere.herokuapp.com/ to bypass cors from client side
     const start = this.state.link.lastIndexOf("-i") + 2;
     const end = this.state.link.length;
     const idStr = this.state.link.substring(start, end);

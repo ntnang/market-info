@@ -32,11 +32,14 @@ app.get("/api/tiki/:id", async (req, res) => {
     });
   } else {
     const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
-    console.log(url);
-    fetch(url)
+
+    fetch(url, {
+      headers: {
+        "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
+      },
+    })
       .then((response) => response.json())
       .then((item) => {
-        console.log(item);
         res.status(201).send(saveTikiItem(item));
       });
   }
@@ -45,10 +48,7 @@ app.get("/api/tiki/:id", async (req, res) => {
 saveChangedPriceTikiItem = (tiki) => {
   const url = `https://tiki.vn/api/v2/products/${tiki.id}`;
   fetch(url)
-    .then((response) => {
-      console.log(response);
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((item) => {
       if (tiki.price != item.price) {
         return saveTikiItem(item);
@@ -59,7 +59,7 @@ saveChangedPriceTikiItem = (tiki) => {
 saveTikiItem = (item) => {
   const tikiItem = new Tiki({
     id: item.id,
-    name: id.name,
+    name: item.name,
     price: item.price,
     thumbnail_url: item.thumbnail_url,
     current_seller: {
@@ -102,7 +102,10 @@ app.get("/api/shopee/track/:itemId/:shopId", async (req, res) => {
   } else {
     const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;
     fetch(url)
-      .then((response) => response.json())
+      .then((response) => {
+        console.log(response);
+        return response.json();
+      })
       .then((data) => {
         res.status(201).send(saveShopeeItem(data.item));
       });
