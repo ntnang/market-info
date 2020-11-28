@@ -4,69 +4,66 @@ class Setting extends Component {
   state = {};
   render() {
     return (
-      <div class="fixed-plugin">
-        <div class="dropdown show-dropdown">
+      <div className="fixed-plugin">
+        <div className="dropdown show-dropdown">
           <a href="#" data-toggle="dropdown">
-            <i class="fa fa-cog fa-2x"> </i>
+            <i className="fa fa-cog fa-2x"> </i>
           </a>
-          <ul class="dropdown-menu">
-            <li class="header-title"> Sidebar Background</li>
-            <li class="adjustments-line">
-              <a
-                href="javascript:void(0)"
-                class="switch-trigger background-color"
-              >
-                <div class="badge-colors text-center">
+          <ul className="dropdown-menu">
+            <li className="header-title"> Sidebar Background</li>
+            <li className="adjustments-line">
+              <a href="#" className="switch-trigger background-color">
+                <div className="badge-colors text-center">
                   <span
-                    class="badge filter badge-primary active"
+                    className="badge filter badge-primary active"
                     data-color="primary"
                   ></span>
                   <span
-                    class="badge filter badge-info"
+                    className="badge filter badge-info"
                     data-color="blue"
                   ></span>
                   <span
-                    class="badge filter badge-success"
+                    className="badge filter badge-success"
                     data-color="green"
                   ></span>
                 </div>
-                <div class="clearfix"></div>
+                <div className="clearfix"></div>
               </a>
             </li>
-            <li class="adjustments-line text-center color-change">
-              <span class="color-label">LIGHT MODE</span>
-              <span class="badge light-badge mr-2"></span>
-              <span class="badge dark-badge ml-2"></span>
-              <span class="color-label">DARK MODE</span>
+            <li className="adjustments-line text-center color-change">
+              <span className="color-label">LIGHT MODE</span>
+              <span className="badge light-badge mr-2"></span>
+              <span className="badge dark-badge ml-2"></span>
+              <span className="color-label">DARK MODE</span>
             </li>
-            <li class="button-container">
+            <li className="button-container">
               <a
                 href="https://www.creative-tim.com/product/black-dashboard"
                 target="_blank"
-                class="btn btn-primary btn-block btn-round"
+                className="btn btn-primary btn-block btn-round"
               >
                 Download Now
               </a>
               <a
                 href="https://demos.creative-tim.com/black-dashboard/docs/1.0/getting-started/introduction.html"
                 target="_blank"
-                class="btn btn-default btn-block btn-round"
+                className="btn btn-default btn-block btn-round"
               >
                 Documentation
               </a>
             </li>
-            <li class="header-title">Thank you for 95 shares!</li>
-            <li class="button-container text-center">
-              <button id="twitter" class="btn btn-round btn-info">
-                <i class="fab fa-twitter"></i> &middot; 45
+            <li className="header-title">Thank you for 95 shares!</li>
+            <li className="button-container text-center">
+              <button id="twitter" className="btn btn-round btn-info">
+                <i className="fab fa-twitter"></i> &middot; 45
               </button>
-              <button id="facebook" class="btn btn-round btn-info">
-                <i class="fab fa-facebook-f"></i> &middot; 50
+              <button id="facebook" className="btn btn-round btn-info">
+                <i className="fab fa-facebook-f"></i> &middot; 50
               </button>
               <br />
               <br />
               <a
-                class="github-button"
+                className="github-button"
                 href="https://github.com/creativetimofficial/black-dashboard"
                 data-icon="octicon-star"
                 data-size="large"

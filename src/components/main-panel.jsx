@@ -5,7 +5,7 @@ import Footer from "./footer";
 
 const MainPanel = () => {
   return (
-    <div class="main-panel">
+    <div className="main-panel">
       <NavBar />
       <Content />
       <Footer />

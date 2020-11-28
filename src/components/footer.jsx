@@ -2,29 +2,29 @@ import React from "react";
 
 const Footer = () => {
   return (
-    <footer class="footer">
-      <div class="container-fluid">
-        <ul class="nav">
-          <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link">
+    <footer className="footer">
+      <div className="container-fluid">
+        <ul className="nav">
+          <li className="nav-item">
+            <a href="#" className="nav-link">
               Creative Tim
             </a>
           </li>
-          <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link">
+          <li className="nav-item">
+            <a href="#" className="nav-link">
               About Us
             </a>
           </li>
-          <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link">
+          <li className="nav-item">
+            <a href="#" className="nav-link">
               Blog
             </a>
           </li>
         </ul>
-        <div class="copyright">
+        <div className="copyright">
           ©<script>document.write(new Date().getFullYear())</script> made with{" "}
-          <i class="tim-icons icon-heart-2"></i> by
-          <a href="javascript:void(0)" target="_blank">
+          <i className="tim-icons icon-heart-2"></i> by
+          <a href="#" target="_blank">
             Creative Tim
           </a>{" "}
           for a better web.
