@@ -4,6 +4,11 @@ class NavBar extends Component {
   state = {
     link: "",
   };
+
+  onInputValueChanged = (event) => {
+    this.setState({ link: event.target.value });
+  };
+
   render() {
     return (
       <React.Fragment>
@@ -137,6 +142,7 @@ class NavBar extends Component {
                   id="inlineFormInputGroup"
                   placeholder="SEARCH"
                   value={this.state.link}
+                  onChange={this.onInputValueChanged}
                 />
                 <button
                   type="button"
