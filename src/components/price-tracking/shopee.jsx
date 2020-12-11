@@ -16,13 +16,13 @@ class Shopee extends Component {
         <h3>Shopee</h3>
         <input value={this.state.link} onChange={this.onInputValueChanged} />
         <button
-          onClick={() => this.getProductInformation()}
+          onClick={this.getProductInformation}
           className="btn btn-secondary btn-sm"
         >
           Get
         </button>
         <button
-          onClick={() => this.trackProductInformation()}
+          onClick={this.trackProductInformation}
           className="btn btn-secondary btn-sm"
         >
           Track

@@ -1,12 +1,45 @@
 import React, { Component } from "react";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
 
 class NavBar extends Component {
   state = {
     link: "",
+    isDialogVisible: false,
+  };
+
+  renderFooter = () => {
+    return (
+      <div>
+        <Button
+          label="No"
+          icon="pi pi-times"
+          onClick={this.hideDialog}
+          className="p-button-text"
+        />
+        <Button
+          label="Yes"
+          icon="pi pi-check"
+          onClick={this.hideDialog}
+          autoFocus
+        />
+      </div>
+    );
+  };
+
+  showDialog = () => {
+    this.setState({ dialogVisibility: true });
+  };
+
+  hideDialog = () => {
+    this.setState({ dialogVisibility: false });
   };
 
   onInputValueChanged = (event) => {
     this.setState({ link: event.target.value });
+    if (event.keyCode === 13) {
+      this.showDialog();
+    }
   };
 
   render() {
@@ -156,6 +189,15 @@ class NavBar extends Component {
             </div>
           </div>
         </div>
+        <Dialog
+          header="Header"
+          footer={this.renderFooter}
+          visible={this.state.isDialogVisible}
+          style={{ width: "50vw" }}
+          onHide={this.hideDialog}
+        >
+          Content
+        </Dialog>
       </React.Fragment>
     );
   }
