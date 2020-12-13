@@ -1,8 +1,12 @@
 import React, { Component } from "react";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import "primereact/resources/themes/saga-blue/theme.css";
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
 
 class Tiki extends Component {
   state = {
-    link: "",
     product: {
       id: "",
       name: "",
@@ -20,54 +24,63 @@ class Tiki extends Component {
       },
     },
   };
-  render() {
+
+  renderFooter = () => {
     return (
       <div>
-        <h3>Tiki</h3>
-        <input value={this.state.link} onChange={this.onInputValueChanged} />
-        <button
-          onClick={this.getProductInformation}
-          className="btn btn-secondary btn-sm"
-        >
-          Get
-        </button>
-        <button
-          onClick={this.trackProductInformation}
-          className="btn btn-secondary btn-sm"
-        >
-          Track
-        </button>
-        <div>{this.state.product.id}</div>
-        <div>{this.state.product.name}</div>
-        <div>{this.state.product.price}</div>
-        <img src={this.state.product.thumbnail_url} />
-        <div>{this.state.product.current_seller.name}</div>
-        <img src={this.state.product.current_seller.logo} />
+        <Button
+          label="Cancel"
+          icon="pi pi-times"
+          onClick={this.hideDialog}
+          className="p-button-text"
+        />
+        <Button
+          label="Track"
+          icon="pi pi-check"
+          onClick={this.hideDialog}
+          autoFocus
+        />
       </div>
     );
+  };
+
+  render() {
+    return (
+      <Dialog
+        header="Product information"
+        footer={this.renderFooter}
+        visible={this.props.isDialogVisible}
+        style={{ width: "50vw" }}
+        onHide={this.props.onHide}
+        onShow={this.getProductInformation}
+        modal
+      >
+        <div>{this.state.product.name}</div>
+        <div>{this.state.product.price}</div>
+      </Dialog>
+    );
   }
+
   getProductInformation = () => {
-    const start = this.state.link.lastIndexOf("-p") + 2;
-    const end = this.state.link.search(".html");
-    const productId = this.state.link.substring(start, end);
+    const start = this.props.link.lastIndexOf("-p") + 2;
+    const end = this.props.link.search(".html");
+    const productId = this.props.link.substring(start, end);
     fetch(`https://tiki.vn/api/v2/products/${productId}`)
       .then((response) => response.json())
       .then((product) => {
         this.setState({ product });
       });
   };
+
   trackProductInformation = () => {
-    const start = this.state.link.lastIndexOf("-p") + 2;
-    const end = this.state.link.search(".html");
-    const productId = this.state.link.substring(start, end);
+    const start = this.props.link.lastIndexOf("-p") + 2;
+    const end = this.props.link.search(".html");
+    const productId = this.props.link.substring(start, end);
     fetch(`http://localhost:3001/api/tiki/${productId}`)
       .then((response) => response.json())
       .then((product) => {
         this.setState({ product });
       });
-  };
-  onInputValueChanged = (event) => {
-    this.setState({ link: event.target.value });
   };
 }
 export default Tiki;

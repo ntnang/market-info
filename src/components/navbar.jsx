@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import { Dialog } from "primereact/dialog";
-import { Button } from "primereact/button";
+import Tiki from "./price-tracking/tiki";
 
 class NavBar extends Component {
   state = {
@@ -8,38 +7,22 @@ class NavBar extends Component {
     isDialogVisible: false,
   };
 
-  renderFooter = () => {
-    return (
-      <div>
-        <Button
-          label="No"
-          icon="pi pi-times"
-          onClick={this.hideDialog}
-          className="p-button-text"
-        />
-        <Button
-          label="Yes"
-          icon="pi pi-check"
-          onClick={this.hideDialog}
-          autoFocus
-        />
-      </div>
-    );
+  onInputValueChanged = (event) => {
+    this.setState({ link: event.target.value });
+  };
+
+  onSearchKeyDown = (event) => {
+    if (event.key === "Enter") {
+      this.showDialog();
+    }
   };
 
   showDialog = () => {
-    this.setState({ dialogVisibility: true });
+    this.setState({ isDialogVisible: true });
   };
 
   hideDialog = () => {
-    this.setState({ dialogVisibility: false });
-  };
-
-  onInputValueChanged = (event) => {
-    this.setState({ link: event.target.value });
-    if (event.keyCode === 13) {
-      this.showDialog();
-    }
+    this.setState({ isDialogVisible: false });
   };
 
   render() {
@@ -176,6 +159,7 @@ class NavBar extends Component {
                   placeholder="SEARCH"
                   value={this.state.link}
                   onChange={this.onInputValueChanged}
+                  onKeyDown={this.onSearchKeyDown}
                 />
                 <button
                   type="button"
@@ -189,15 +173,11 @@ class NavBar extends Component {
             </div>
           </div>
         </div>
-        <Dialog
-          header="Header"
-          footer={this.renderFooter}
-          visible={this.state.isDialogVisible}
-          style={{ width: "50vw" }}
+        <Tiki
+          link={this.state.link}
+          isDialogVisible={this.state.isDialogVisible}
           onHide={this.hideDialog}
-        >
-          Content
-        </Dialog>
+        />
       </React.Fragment>
     );
   }
