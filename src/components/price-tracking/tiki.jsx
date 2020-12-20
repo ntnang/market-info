@@ -25,7 +25,7 @@ class Tiki extends Component {
     },
   };
 
-  renderFooter = () => {
+  renderFooter() {
     return (
       <div>
         <Button
@@ -42,13 +42,13 @@ class Tiki extends Component {
         />
       </div>
     );
-  };
+  }
 
   render() {
     return (
       <Dialog
         header="Product information"
-        footer={this.renderFooter}
+        footer={this.renderFooter()}
         visible={this.props.isDialogVisible}
         style={{ width: "50vw" }}
         onHide={this.props.onHide}
