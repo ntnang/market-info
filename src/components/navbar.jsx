@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 import Tiki from "./price-tracking/tiki";
+import { OverlayPanel } from "primereact/overlaypanel";
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
 
 class NavBar extends Component {
   state = {
@@ -57,7 +60,7 @@ class NavBar extends Component {
             <div className="collapse navbar-collapse" id="navigation">
               <ul className="navbar-nav ml-auto">
                 <li className="search-bar input-group">
-                  <button
+                  {/* <button
                     className="btn btn-link"
                     id="search-button"
                     data-toggle="modal"
@@ -65,7 +68,12 @@ class NavBar extends Component {
                   >
                     <i className="tim-icons icon-zoom-split"></i>
                     <span className="d-lg-none d-md-block">Search</span>
-                  </button>
+                  </button> */}
+                  <Button
+                    id="search-button"
+                    icon="tim-icons icon-zoom-split"
+                    onClick={(e) => this.op.toggle(e)}
+                  />
                 </li>
                 <li className="dropdown nav-item">
                   <a
@@ -141,7 +149,16 @@ class NavBar extends Component {
             </div>
           </div>
         </nav>
-        <div
+
+        <OverlayPanel ref={(el) => (this.op = el)} showCloseIcon dismissable>
+          <InputText
+            value={this.state.link}
+            placeholder="SEARCH"
+            onChange={this.onInputValueChanged}
+            onKeyDown={this.onSearchKeyDown}
+          />
+        </OverlayPanel>
+        {/* <div
           className="modal modal-search fade"
           id="searchModal"
           tabIndex="-1"
@@ -172,7 +189,7 @@ class NavBar extends Component {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
         <Tiki
           link={this.state.link}
           isDialogVisible={this.state.isDialogVisible}
