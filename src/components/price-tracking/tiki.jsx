@@ -31,13 +31,13 @@ class Tiki extends Component {
         <Button
           label="Cancel"
           icon="pi pi-times"
-          onClick={this.hideDialog}
+          onClick={this.props.onHide}
           className="p-button-text"
         />
         <Button
           label="Track"
           icon="pi pi-check"
-          onClick={this.hideDialog}
+          onClick={this.trackProductInformation}
           autoFocus
         />
       </div>
@@ -81,6 +81,7 @@ class Tiki extends Component {
       .then((product) => {
         this.setState({ product });
       });
+    this.props.onHide();
   };
 }
 export default Tiki;

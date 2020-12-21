@@ -47,7 +47,11 @@ app.get("/api/tiki/:id", async (req, res) => {
 
 saveChangedPriceTikiItem = (tiki) => {
   const url = `https://tiki.vn/api/v2/products/${tiki.id}`;
-  fetch(url)
+  fetch(url, {
+    headers: {
+      "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
+    },
+  })
     .then((response) => response.json())
     .then((item) => {
       if (tiki.price != item.price) {
