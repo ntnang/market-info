@@ -72,6 +72,7 @@ class NavBar extends Component {
                   <Button
                     id="search-button"
                     icon="tim-icons icon-zoom-split"
+                    className="p-button-secondary p-button-text"
                     onClick={(e) => this.op.toggle(e)}
                   />
                 </li>
@@ -153,7 +154,7 @@ class NavBar extends Component {
         <OverlayPanel ref={(el) => (this.op = el)} showCloseIcon dismissable>
           <InputText
             value={this.state.link}
-            placeholder="SEARCH"
+            placeholder="Search Tiki/Shopee"
             onChange={this.onInputValueChanged}
             onKeyDown={this.onSearchKeyDown}
           />
