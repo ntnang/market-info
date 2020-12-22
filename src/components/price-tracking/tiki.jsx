@@ -62,9 +62,7 @@ class Tiki extends Component {
   }
 
   getProductInformation = () => {
-    const start = this.props.link.lastIndexOf("-p") + 2;
-    const end = this.props.link.search(".html");
-    const productId = this.props.link.substring(start, end);
+    const productId = this.extractProductId();
     fetch(`https://tiki.vn/api/v2/products/${productId}`)
       .then((response) => response.json())
       .then((product) => {
@@ -73,9 +71,7 @@ class Tiki extends Component {
   };
 
   trackProductInformation = () => {
-    const start = this.props.link.lastIndexOf("-p") + 2;
-    const end = this.props.link.search(".html");
-    const productId = this.props.link.substring(start, end);
+    const productId = this.extractProductId();
     fetch(`http://localhost:3001/api/tiki/${productId}`)
       .then((response) => response.json())
       .then((product) => {
@@ -83,5 +79,12 @@ class Tiki extends Component {
       });
     this.props.onHide();
   };
+
+  extractProductId() {
+    const start = this.props.link.lastIndexOf("-p") + 2;
+    const end = this.props.link.search(".html");
+    const productId = this.props.link.substring(start, end);
+    return productId;
+  }
 }
 export default Tiki;

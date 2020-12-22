@@ -56,8 +56,8 @@ class Shopee extends Component {
     const ids = idStr.split(".");
     const itemId = ids[2];
     const shopId = ids[1];
-    const localEndPoint = `http://localhost:3001/api/shopee/track/${itemId}/${shopId}`;
-    fetch(localEndPoint)
+    const endPoint = `http://localhost:3001/api/shopee/track/${itemId}/${shopId}`;
+    fetch(endPoint)
       .then((response) => response.json())
       .then((data) => {
         this.setState({ item: data });
