@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Tiki from "./price-tracking/tiki";
+import Shopee from "./price-tracking/shopee";
 import { OverlayPanel } from "primereact/overlaypanel";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
@@ -7,7 +8,8 @@ import { InputText } from "primereact/inputtext";
 class NavBar extends Component {
   state = {
     link: "",
-    isDialogVisible: false,
+    isTikiDialogVisible: false,
+    isShopeeDialogVisible: false,
   };
 
   onInputValueChanged = (event) => {
@@ -193,7 +195,12 @@ class NavBar extends Component {
         </div> */}
         <Tiki
           link={this.state.link}
-          isDialogVisible={this.state.isDialogVisible}
+          isDialogVisible={this.state.isTikiDialogVisible}
+          onHide={this.hideDialog}
+        />
+        <Shopee
+          link={this.state.link}
+          isDialogVisible={this.state.isShopeeDialogVisible}
           onHide={this.hideDialog}
         />
       </React.Fragment>
