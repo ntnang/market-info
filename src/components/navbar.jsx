@@ -12,24 +12,6 @@ class NavBar extends Component {
     isShopeeDialogVisible: false,
   };
 
-  onInputValueChanged = (event) => {
-    this.setState({ link: event.target.value });
-  };
-
-  onSearchKeyDown = (event) => {
-    if (event.key === "Enter") {
-      this.showDialog();
-    }
-  };
-
-  showDialog = () => {
-    this.setState({ isDialogVisible: true });
-  };
-
-  hideDialog = () => {
-    this.setState({ isDialogVisible: false });
-  };
-
   render() {
     return (
       <React.Fragment>
@@ -196,15 +178,70 @@ class NavBar extends Component {
         <Tiki
           link={this.state.link}
           isDialogVisible={this.state.isTikiDialogVisible}
-          onHide={this.hideDialog}
+          onHide={this.hideTikiDialog}
         />
         <Shopee
           link={this.state.link}
           isDialogVisible={this.state.isShopeeDialogVisible}
-          onHide={this.hideDialog}
+          onHide={this.hideShopeeDialog}
         />
       </React.Fragment>
     );
+  }
+
+  onInputValueChanged = (event) => {
+    this.setState({ link: event.target.value });
+  };
+
+  onSearchKeyDown = (event) => {
+    if (event.key === "Enter") {
+      this.showProductInformation();
+    }
+  };
+
+  showTikiDialog = () => {
+    this.setState({ isTikiDialogVisible: true });
+  };
+
+  hideTikiDialog = () => {
+    this.setState({ isTikiDialogVisible: false });
+  };
+
+  showShopeeDialog = () => {
+    this.setState({ isShopeeDialogVisible: true });
+  };
+
+  hideShopeeDialog = () => {
+    this.setState({ isShopeeDialogVisible: false });
+  };
+
+  showProductInformation() {
+    switch (this.extractHostname(this.state.link)) {
+      case "tiki.vn":
+        this.showTikiDialog();
+        break;
+      case "shopee.vn":
+        this.showShopeeDialog();
+        break;
+    }
+  }
+
+  extractHostname(url) {
+    var hostname;
+    //find & remove protocol (http, ftp, etc.) and get hostname
+
+    if (url.indexOf("//") > -1) {
+      hostname = url.split("/")[2];
+    } else {
+      hostname = url.split("/")[0];
+    }
+
+    //find & remove port number
+    hostname = hostname.split(":")[0];
+    //find & remove "?"
+    hostname = hostname.split("?")[0];
+
+    return hostname;
   }
 }
 
