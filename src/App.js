@@ -10,8 +10,6 @@ class App extends Component {
   render() {
     return (
       <React.Fragment>
-        {/* <Tiki />
-        <Shopee /> */}
         <SideBar />
         <MainPanel />
         <Setting />

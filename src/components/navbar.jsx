@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import Tiki from "./price-tracking/tiki";
 import Shopee from "./price-tracking/shopee";
-import { OverlayPanel } from "primereact/overlaypanel";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 
@@ -53,11 +52,17 @@ class NavBar extends Component {
                     <i className="tim-icons icon-zoom-split"></i>
                     <span className="d-lg-none d-md-block">Search</span>
                   </button> */}
+                  <InputText
+                    value={this.state.link}
+                    placeholder="Search Tiki/Shopee"
+                    onChange={this.onInputValueChanged}
+                    onKeyDown={this.onSearchKeyDown}
+                  />
                   <Button
                     id="search-button"
                     icon="tim-icons icon-zoom-split"
                     className="p-button-secondary p-button-text"
-                    onClick={(e) => this.op.toggle(e)}
+                    onClick={this.showProductInformation}
                   />
                 </li>
                 <li className="dropdown nav-item">
@@ -134,15 +139,6 @@ class NavBar extends Component {
             </div>
           </div>
         </nav>
-
-        <OverlayPanel ref={(el) => (this.op = el)} showCloseIcon dismissable>
-          <InputText
-            value={this.state.link}
-            placeholder="Search Tiki/Shopee"
-            onChange={this.onInputValueChanged}
-            onKeyDown={this.onSearchKeyDown}
-          />
-        </OverlayPanel>
         {/* <div
           className="modal modal-search fade"
           id="searchModal"
@@ -215,7 +211,7 @@ class NavBar extends Component {
     this.setState({ isShopeeDialogVisible: false });
   };
 
-  showProductInformation() {
+  showProductInformation = () => {
     switch (this.extractHostname(this.state.link)) {
       case "tiki.vn":
         this.showTikiDialog();
@@ -224,7 +220,7 @@ class NavBar extends Component {
         this.showShopeeDialog();
         break;
     }
-  }
+  };
 
   extractHostname(url) {
     var hostname;
