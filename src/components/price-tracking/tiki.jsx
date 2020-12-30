@@ -37,6 +37,7 @@ class Tiki extends Component {
         <Button
           label="Track"
           icon="pi pi-check"
+          className="btn-primary"
           onClick={this.trackProductInformation}
           autoFocus
         />

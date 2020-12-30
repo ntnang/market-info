@@ -55,6 +55,7 @@ class NavBar extends Component {
                   <InputText
                     value={this.state.link}
                     placeholder="Search Tiki/Shopee"
+                    className="form-control"
                     onChange={this.onInputValueChanged}
                     onKeyDown={this.onSearchKeyDown}
                   />
