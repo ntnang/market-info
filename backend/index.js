@@ -24,12 +24,12 @@ app.get("/api/tiki/:id", async (req, res) => {
   const query = { id: req.params.id };
   const itemExisted = await Tiki.exists(query);
   if (itemExisted) {
-    Tiki.find(query, (err, tikis) => {
-      tikis.forEach((tiki) => {
+    Tiki.findOne(query)
+      .sort({ trackedDate: -1 })
+      .exec((err, tiki) => {
         const changedItem = saveChangedPriceTikiItem(tiki);
         res.status(200).send(changedItem);
       });
-    });
   } else {
     const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
 
@@ -38,11 +38,32 @@ app.get("/api/tiki/:id", async (req, res) => {
         "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
       },
     })
-      .then((response) => response.json())
+      .then((extRes) => extRes.json())
       .then((item) => {
         res.status(201).send(saveTikiItem(item));
       });
   }
+});
+
+app.get("/api/tiki/history/:id", async (req, res) => {
+  const query = { id: req.params.id };
+  const itemExisted = await Tiki.exists(query);
+  if (itemExisted) {
+    Tiki.find(query, (err, tikis) => {
+      res.status(200).send(tikis);
+    });
+  }
+});
+
+app.get("/api/tiki/history/last", async (req, res) => {
+  Tiki.findOne()
+    .sort({ trackedDate: -1 })
+    .exec((err, tiki) => {
+      const lastTrackedProductId = tiki.schema.paths["id"];
+      Tiki.find({ id: lastTrackedProductId }, (err, tikis) => {
+        res.status(200).send(tikis);
+      });
+    });
 });
 
 saveChangedPriceTikiItem = (tiki) => {
@@ -52,7 +73,7 @@ saveChangedPriceTikiItem = (tiki) => {
       "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
     },
   })
-    .then((response) => response.json())
+    .then((res) => res.json())
     .then((item) => {
       if (tiki.price != item.price) {
         return saveTikiItem(item);
@@ -87,7 +108,7 @@ saveTikiItem = (item) => {
 app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
   const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;
   fetch(url)
-    .then((response) => response.json())
+    .then((res) => res.json())
     .then((data) => {
       res.status(200).send(data);
     });
@@ -97,19 +118,16 @@ app.get("/api/shopee/track/:itemId/:shopId", async (req, res) => {
   const query = { itemid: req.params.itemId, shopid: req.params.shopId };
   const itemExisted = await Shopee.exists(query);
   if (itemExisted) {
-    Shopee.find(query, (err, shopees) => {
-      shopees.forEach((shopee) => {
+    Shopee.findOne(query)
+      .sort({ trackedDate: -1 })
+      .exec((err, shopee) => {
         const changedItem = saveChangedPriceShopeeItem(shopee);
         res.status(200).send(changedItem);
       });
-    });
   } else {
     const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;
     fetch(url)
-      .then((response) => {
-        console.log(response);
-        return response.json();
-      })
+      .then((extRes) => extRes.json())
       .then((data) => {
         res.status(201).send(saveShopeeItem(data.item));
       });
@@ -119,7 +137,7 @@ app.get("/api/shopee/track/:itemId/:shopId", async (req, res) => {
 saveChangedPriceShopeeItem = (shopee) => {
   const url = `https://shopee.vn/api/v2/item/get?itemid=${shopee.itemid}&shopid=${shopee.shopid}`;
   fetch(url)
-    .then((response) => response.json())
+    .then((extRes) => extRes.json())
     .then((data) => {
       if (shopee.price_max != data.item.price_max) {
         return saveShopeeItem(data.item);

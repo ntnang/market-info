@@ -3,7 +3,24 @@ import { Card } from "primereact/card";
 import { Chart } from "primereact/chart";
 
 class Content extends Component {
-  state = {};
+  state = {
+    history: {
+      datasets: [
+        {
+          label: "Last 7 days",
+          labels: [],
+          data: [],
+        },
+      ],
+    },
+  };
+
+  findLastTrackedProductHistory = () => {
+    fetch("http://localhost:3001/api/tiki/history/last")
+      .then((res) => res.json())
+      .then();
+  };
+
   render() {
     return (
       <div className="content">

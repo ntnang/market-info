@@ -61,7 +61,7 @@ class Shopee extends Component {
     const shopId = ids[1];
     const endPoint = `http://localhost:3001/api/shopee/get/${itemId}/${shopId}`;
     fetch(endPoint)
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((data) => {
         this.setState({ item: data.item });
       });
@@ -76,7 +76,7 @@ class Shopee extends Component {
     const shopId = ids[1];
     const endPoint = `http://localhost:3001/api/shopee/track/${itemId}/${shopId}`;
     fetch(endPoint)
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((data) => {
         this.setState({ item: data });
       });

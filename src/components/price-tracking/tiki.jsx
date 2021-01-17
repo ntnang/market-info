@@ -65,7 +65,7 @@ class Tiki extends Component {
   getProductInformation = () => {
     const productId = this.extractProductId();
     fetch(`https://tiki.vn/api/v2/products/${productId}`)
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((product) => {
         this.setState({ product });
       });
@@ -74,7 +74,7 @@ class Tiki extends Component {
   trackProductInformation = () => {
     const productId = this.extractProductId();
     fetch(`http://localhost:3001/api/tiki/${productId}`)
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((product) => {
         this.setState({ product });
       });

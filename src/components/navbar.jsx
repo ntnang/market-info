@@ -43,15 +43,6 @@ class NavBar extends Component {
             <div className="collapse navbar-collapse" id="navigation">
               <ul className="navbar-nav ml-auto">
                 <li className="search-bar input-group">
-                  {/* <button
-                    className="btn btn-link"
-                    id="search-button"
-                    data-toggle="modal"
-                    data-target="#searchModal"
-                  >
-                    <i className="tim-icons icon-zoom-split"></i>
-                    <span className="d-lg-none d-md-block">Search</span>
-                  </button> */}
                   <InputText
                     value={this.state.link}
                     placeholder="Search Tiki/Shopee"
@@ -140,38 +131,6 @@ class NavBar extends Component {
             </div>
           </div>
         </nav>
-        {/* <div
-          className="modal modal-search fade"
-          id="searchModal"
-          tabIndex="-1"
-          role="dialog"
-          aria-labelledby="searchModal"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <input
-                  type="text"
-                  className="form-control"
-                  id="inlineFormInputGroup"
-                  placeholder="SEARCH"
-                  value={this.state.link}
-                  onChange={this.onInputValueChanged}
-                  onKeyDown={this.onSearchKeyDown}
-                />
-                <button
-                  type="button"
-                  className="close"
-                  data-dismiss="modal"
-                  aria-label="Close"
-                >
-                  <i className="tim-icons icon-simple-remove"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div> */}
         <Tiki
           link={this.state.link}
           isDialogVisible={this.state.isTikiDialogVisible}
