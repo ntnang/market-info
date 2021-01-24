@@ -4,14 +4,8 @@ import { Chart } from "primereact/chart";
 
 class Content extends Component {
   state = {
-    history: {
-      datasets: [
-        {
-          label: "Last 7 days",
-          labels: [],
-          data: [],
-        },
-      ],
+    productHistory: {
+      datasets: [],
     },
   };
 
@@ -20,6 +14,44 @@ class Content extends Component {
       .then((res) => res.json())
       .then();
   };
+
+  buildChartDataSet(productHistories) {
+    let datasets = [];
+    if (productHistories.length > 0) {
+      datasets.push(this.buildLastSevenDaysDataSet(productHistories));
+    }
+    return datasets;
+  }
+
+  buildLastSevenDaysDataSet(productHistories) {
+    let dataset = {};
+    dataset.label = "Last 7 days";
+    dataset.labels = [...Array(7)].map((_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.getDay();
+    });
+    let lastSevenDaysPrices = productHistories
+      .filter(
+        (history) => Date.parse(history.trackedDate) > getDateThreshold(7)
+      )
+      .map((history) => history.price);
+
+    if (lastSevenDaysPrices.length == productHistories.length) {
+      // All histories are within the chart range
+    } else if (lastSevenDaysPrices.length == 0) {
+      // No history is in the chart range
+    } else {
+      // Some histories are within the chart range
+    }
+    dataset.data = [];
+  }
+
+  getDateThreshold(numberOfDays) {
+    let dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - numberOfDays);
+    return dateThreshold;
+  }
 
   render() {
     return (

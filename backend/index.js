@@ -6,7 +6,7 @@ const cors = require("cors");
 const Tiki = require("./model/tiki");
 const Shopee = require("./model/shopee");
 const port = 3001;
-const trackingInterval = 86400000;
+const trackingInterval = 3600000; // One hour
 
 app.use(cors());
 
@@ -55,12 +55,11 @@ app.get("/api/tiki/history/:id", async (req, res) => {
   }
 });
 
-app.get("/api/tiki/history/last", async (req, res) => {
+app.get("/api/tiki/last/history/", (req, res) => {
   Tiki.findOne()
-    .sort({ trackedDate: -1 })
-    .exec((err, tiki) => {
-      const lastTrackedProductId = tiki.schema.paths["id"];
-      Tiki.find({ id: lastTrackedProductId }, (err, tikis) => {
+    .sort({ trackedDate: 1 })
+    .exec((err, lastTrackedProduct) => {
+      Tiki.find({ id: lastTrackedProduct.id }, (err, tikis) => {
         res.status(200).send(tikis);
       });
     });
