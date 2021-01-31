@@ -9,11 +9,15 @@ class Content extends Component {
     },
   };
 
-  findLastTrackedProductHistory = () => {
-    fetch("http://localhost:3001/api/tiki/history/last")
+  componentDidMount() {
+    this.findLastTrackedProductHistories();
+  }
+
+  findLastTrackedProductHistories() {
+    fetch("http://localhost:3001/api/tiki/last/history")
       .then((res) => res.json())
-      .then();
-  };
+      .then((histories) => this.buildChartDataSet(histories));
+  }
 
   buildChartDataSet(productHistories) {
     let datasets = [];
@@ -25,26 +29,22 @@ class Content extends Component {
 
   buildLastSevenDaysDataSet(productHistories) {
     let dataset = {};
-    dataset.label = "Last 7 days";
-    dataset.labels = [...Array(7)].map((_, i) => {
+    const lastSeventDates = [...Array(7)].map((_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      return date.getDay();
+      return date;
     });
-    let lastSevenDaysPrices = productHistories
-      .filter(
-        (history) => Date.parse(history.trackedDate) > getDateThreshold(7)
-      )
-      .map((history) => history.price);
+    let lastSevenDaysHistories = productHistories.filter(
+      (history) => Date.parse(history.trackedDate) > this.getDateThreshold(7)
+    );
 
-    if (lastSevenDaysPrices.length == productHistories.length) {
-      // All histories are within the chart range
-    } else if (lastSevenDaysPrices.length == 0) {
-      // No history is in the chart range
-    } else {
-      // Some histories are within the chart range
-    }
-    dataset.data = [];
+    dataset.data = this.generateChartData(
+      productHistories,
+      lastSevenDaysHistories,
+      lastSeventDates
+    );
+    dataset.label = "Last 7 days";
+    dataset.labels = lastSeventDates.map((date) => date.getDay());
   }
 
   getDateThreshold(numberOfDays) {
@@ -53,12 +53,47 @@ class Content extends Component {
     return dateThreshold;
   }
 
+  getBoundaryStartValue(wholeHistories, inChartRangeHistories) {
+    let outChartRangeHistories = wholeHistories.filter(
+      (history) => !inChartRangeHistories.includes(history)
+    );
+    // outChartRangeHistories.sort(
+    //   (history1, history2) =>
+    //     history1.trackedDate.getTime() - history2.trackedDate.getTime()
+    // );
+    return outChartRangeHistories[outChartRangeHistories.length - 1];
+  }
+
+  generateChartData(wholeHistories, inChartRangeHistories, chartDates) {
+    let filledHistories = [];
+    let previousHistory = this.getBoundaryStartValue(
+      wholeHistories,
+      inChartRangeHistories
+    );
+    chartDates.forEach((date) => {
+      const historiesOnCurrentDate = inChartRangeHistories.filter(
+        (history) =>
+          history.trackedDate.getDate() == date.getDate() &&
+          history.trackedDate.getMonth() == date.getMonth() &&
+          history.trackedDate.getFullYear() == date.getFullYear()
+      );
+      if (historiesOnCurrentDate.length != 0) {
+        previousHistory =
+          historiesOnCurrentDate[historiesOnCurrentDate.length - 1];
+      }
+      filledHistories.push(previousHistory);
+    });
+    return filledHistories.map((history) => history.price);
+  }
+
   render() {
     return (
       <div className="content">
         <div className="row">
           <div className="col-12">
-            <Card className="card card-chart"></Card>
+            <Card className="card card-chart">
+              <Chart />
+            </Card>
             {/* <div className="card card-chart">
               <div className="card-header ">
                 <div className="row">

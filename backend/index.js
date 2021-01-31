@@ -57,11 +57,13 @@ app.get("/api/tiki/history/:id", async (req, res) => {
 
 app.get("/api/tiki/last/history/", (req, res) => {
   Tiki.findOne()
-    .sort({ trackedDate: 1 })
+    .sort({ trackedDate: -1 })
     .exec((err, lastTrackedProduct) => {
-      Tiki.find({ id: lastTrackedProduct.id }, (err, tikis) => {
-        res.status(200).send(tikis);
-      });
+      Tiki.find({ id: lastTrackedProduct.id })
+        .sort({ trackedDate: 1 })
+        .exec((err, tikis) => {
+          res.status(200).send(tikis);
+        });
     });
 });
 
