@@ -57,10 +57,6 @@ class Content extends Component {
     let outChartRangeHistories = wholeHistories.filter(
       (history) => !inChartRangeHistories.includes(history)
     );
-    // outChartRangeHistories.sort(
-    //   (history1, history2) =>
-    //     history1.trackedDate.getTime() - history2.trackedDate.getTime()
-    // );
     return outChartRangeHistories[outChartRangeHistories.length - 1];
   }
 
@@ -86,13 +82,41 @@ class Content extends Component {
     return filledHistories.map((history) => history.price);
   }
 
+  basicOptions = {
+    legend: {
+      labels: {
+        fontColor: "#495057",
+      },
+    },
+    scales: {
+      xAxes: [
+        {
+          ticks: {
+            fontColor: "#495057",
+          },
+        },
+      ],
+      yAxes: [
+        {
+          ticks: {
+            fontColor: "#495057",
+          },
+        },
+      ],
+    },
+  };
+
   render() {
     return (
       <div className="content">
         <div className="row">
           <div className="col-12">
             <Card className="card card-chart">
-              <Chart />
+              <Chart
+                type="line"
+                data={this.state.productHistory}
+                options={this.basicOptions}
+              />
             </Card>
             {/* <div className="card card-chart">
               <div className="card-header ">
