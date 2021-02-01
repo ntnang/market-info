@@ -9,14 +9,56 @@ class Content extends Component {
     },
   };
 
+  lastSevenDates = [...Array(7)]
+    .map((_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date;
+    })
+    .reverse();
+
+  weekDayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
   componentDidMount() {
     this.findLastTrackedProductHistories();
   }
 
   findLastTrackedProductHistories() {
+    const lastSevenWeekDayNames = this.lastSevenDates.map(
+      (date) => this.weekDayNames[date.getDay()]
+    );
     fetch("http://localhost:3001/api/tiki/last/history")
       .then((res) => res.json())
-      .then((histories) => this.buildChartDataSet(histories));
+      .then((histories) => {
+        this.setState({
+          productHistory: {
+            labels: lastSevenWeekDayNames,
+            datasets: this.buildChartDataSet(histories),
+          },
+        });
+      });
   }
 
   buildChartDataSet(productHistories) {
@@ -29,11 +71,6 @@ class Content extends Component {
 
   buildLastSevenDaysDataSet(productHistories) {
     let dataset = {};
-    const lastSeventDates = [...Array(7)].map((_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      return date;
-    });
     let lastSevenDaysHistories = productHistories.filter(
       (history) => Date.parse(history.trackedDate) > this.getDateThreshold(7)
     );
@@ -41,10 +78,10 @@ class Content extends Component {
     dataset.data = this.generateChartData(
       productHistories,
       lastSevenDaysHistories,
-      lastSeventDates
+      this.lastSevenDates
     );
     dataset.label = "Last 7 days";
-    dataset.labels = lastSeventDates.map((date) => date.getDay());
+    return dataset;
   }
 
   getDateThreshold(numberOfDays) {
@@ -67,12 +104,14 @@ class Content extends Component {
       inChartRangeHistories
     );
     chartDates.forEach((date) => {
-      const historiesOnCurrentDate = inChartRangeHistories.filter(
-        (history) =>
-          history.trackedDate.getDate() == date.getDate() &&
-          history.trackedDate.getMonth() == date.getMonth() &&
-          history.trackedDate.getFullYear() == date.getFullYear()
-      );
+      const historiesOnCurrentDate = inChartRangeHistories.filter((history) => {
+        const trackedDate = new Date(history.trackedDate);
+        return (
+          trackedDate.getDate() == date.getDate() &&
+          trackedDate.getMonth() == date.getMonth() &&
+          trackedDate.getFullYear() == date.getFullYear()
+        );
+      });
       if (historiesOnCurrentDate.length != 0) {
         previousHistory =
           historiesOnCurrentDate[historiesOnCurrentDate.length - 1];
