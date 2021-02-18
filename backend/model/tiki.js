@@ -15,7 +15,7 @@ const tikiSchema = mongoose.Schema({
     logo: String,
     product_id: String,
   },
-  other_sellers: Array,
+  other_sellers: [],
   trackedDate: Date,
 });
 

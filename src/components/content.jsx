@@ -118,9 +118,7 @@ class Content extends Component {
       }
       filledHistories.push(previousHistory);
     });
-    return filledHistories.map((history) =>
-      history ? history.price : history
-    );
+    return filledHistories.map((history) => (history ? history.price : null));
   }
 
   basicOptions = {
