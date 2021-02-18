@@ -22,6 +22,7 @@ class Tiki extends Component {
         logo: "",
         product_id: "",
       },
+      other_sellers: [],
     },
   };
 

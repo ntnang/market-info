@@ -98,6 +98,7 @@ saveTikiItem = (item) => {
       logo: item.current_seller.logo,
       product_id: item.current_seller.product_id,
     },
+    other_sellers: item.other_sellers,
     trackedDate: new Date(),
   });
   tikiItem.save((err) => {
