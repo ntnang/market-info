@@ -62,25 +62,69 @@ class Content extends Component {
   }
 
   buildChartDataSet(productHistories) {
-    let datasets = [];
+    const datasets = [];
     if (productHistories.length > 0) {
-      datasets.push(this.buildLastSevenDaysDataSet(productHistories));
+      const groupedProductHistories = this.groupProductHistoriesBySeller(
+        productHistories
+      );
+      for (let history of groupedProductHistories.values()) {
+        datasets.push(this.buildLastSevenDaysDataSet(history));
+      }
     }
     return datasets;
   }
 
-  buildLastSevenDaysDataSet(productHistories) {
-    let dataset = {};
-    let lastSevenDaysHistories = productHistories.filter(
+  groupProductHistoriesBySeller(productHistories) {
+    const groupedProductHistories = new Map();
+    productHistories.forEach((history) => {
+      const currentSeller = history.current_seller;
+      if (groupedProductHistories.get(currentSeller.id)) {
+        groupedProductHistories.get(currentSeller.id).priceHistories.push({
+          price: currentSeller.price,
+          trackedDate: history.trackedDate,
+        });
+      } else {
+        groupedProductHistories.set(currentSeller.id, {
+          shopName: currentSeller.name,
+          priceHistories: [
+            {
+              price: currentSeller.price,
+              trackedDate: history.trackedDate,
+            },
+          ],
+        });
+        history.other_sellers.forEach((seller) => {
+          if (groupedProductHistories.get(seller.id)) {
+            groupedProductHistories.get(seller.id).priceHistories.push({
+              price: seller.price,
+              trackedDate: history.trackedDate,
+            });
+          } else {
+            groupedProductHistories.set(seller.id, {
+              shopName: seller.name,
+              priceHistories: [
+                { price: seller.price, trackedDate: history.trackedDate },
+              ],
+            });
+          }
+        });
+      }
+    });
+    return groupedProductHistories;
+  }
+
+  buildLastSevenDaysDataSet(productHistoriesBySeller) {
+    const dataset = {};
+    const lastSevenDaysHistories = productHistoriesBySeller.priceHistories.filter(
       (history) => Date.parse(history.trackedDate) > this.getDateThreshold(7)
     );
 
     dataset.data = this.generateChartData(
-      productHistories,
+      productHistoriesBySeller.priceHistories,
       lastSevenDaysHistories,
       this.lastSevenDates
     );
-    dataset.label = "Last 7 days";
+    dataset.label = productHistoriesBySeller.shopName;
     return dataset;
   }
 
@@ -90,15 +134,8 @@ class Content extends Component {
     return dateThreshold;
   }
 
-  getBoundaryStartValue(wholeHistories, inChartRangeHistories) {
-    let outChartRangeHistories = wholeHistories.filter(
-      (history) => !inChartRangeHistories.includes(history)
-    );
-    return outChartRangeHistories[outChartRangeHistories.length - 1];
-  }
-
   generateChartData(wholeHistories, inChartRangeHistories, chartDates) {
-    let filledHistories = [];
+    const filledHistories = [];
     let previousHistory = this.getBoundaryStartValue(
       wholeHistories,
       inChartRangeHistories
@@ -119,6 +156,13 @@ class Content extends Component {
       filledHistories.push(previousHistory);
     });
     return filledHistories.map((history) => (history ? history.price : null));
+  }
+
+  getBoundaryStartValue(wholeHistories, inChartRangeHistories) {
+    const outChartRangeHistories = wholeHistories.filter(
+      (history) => !inChartRangeHistories.includes(history)
+    );
+    return outChartRangeHistories[outChartRangeHistories.length - 1];
   }
 
   basicOptions = {
