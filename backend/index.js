@@ -24,12 +24,10 @@ app.get("/api/tiki/:id", async (req, res) => {
   const query = { id: req.params.id };
   const itemExisted = await Tiki.exists(query);
   if (itemExisted) {
-    Tiki.findOne(query)
-      .sort({ trackedDate: -1 })
-      .exec((err, tiki) => {
-        const changedItem = saveChangedPriceTikiItem(tiki);
-        res.status(200).send(changedItem);
-      });
+    Tiki.findOne(query).exec((err, tiki) => {
+      const changedItem = saveChangedPriceTikiItem(tiki);
+      res.status(200).send(changedItem);
+    });
   } else {
     const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
 
@@ -57,13 +55,13 @@ app.get("/api/tiki/history/:id", async (req, res) => {
 
 app.get("/api/tiki/last/history/", (req, res) => {
   Tiki.findOne()
-    .sort({ trackedDate: -1 })
+    .sort({ lastTrackedDate: -1 })
     .exec((err, lastTrackedProduct) => {
-      Tiki.find({ id: lastTrackedProduct.id })
-        .sort({ trackedDate: 1 })
-        .exec((err, tikis) => {
+      if (lastTrackedProduct) {
+        Tiki.findOne({ id: lastTrackedProduct.id }).exec((err, tikis) => {
           res.status(200).send(tikis);
         });
+      }
     });
 });
 
@@ -76,35 +74,61 @@ saveChangedPriceTikiItem = (tiki) => {
   })
     .then((res) => res.json())
     .then((item) => {
-      if (tiki.price != item.price) {
+      if (tiki.price !== item.price) {
         return saveTikiItem(item);
       }
     });
 };
 
+isAnyTikiPriceChanged = (newItem, lastItem) => {
+  let anySellerPriceChanged = false;
+
+  if (newItem.current_seller.id === lastItem.current_seller.id)
+    return anySellerPriceChanged;
+};
+
 saveTikiItem = (item) => {
+  const currentDateTime = new Date();
   const tikiItem = new Tiki({
     id: item.id,
     name: item.name,
-    price: item.price,
     thumbnail_url: item.thumbnail_url,
-    current_seller: {
-      id: item.current_seller.id,
-      store_id: item.current_seller.store_id,
-      name: item.current_seller.name,
-      slug: item.current_seller.slug,
-      sku: item.current_seller.sku,
-      price: item.current_seller.price,
-      logo: item.current_seller.logo,
-      product_id: item.current_seller.product_id,
-    },
-    other_sellers: item.other_sellers,
-    trackedDate: new Date(),
+    sellers: getAllTikiSellers(item, currentDateTime),
+    lastTrackedDate: currentDateTime,
   });
   tikiItem.save((err) => {
     if (err) console.error(err);
   });
   return tikiItem;
+};
+
+getAllTikiSellers = (item, currentDateTime) => {
+  const sellers = new Map();
+  const currentSeller = {
+    storeId: item.current_seller.store_id,
+    name: item.current_seller.name,
+    slug: item.current_seller.slug,
+    sku: item.current_seller.sku,
+    logo: item.current_seller.logo,
+    productId: item.current_seller.product_id,
+    priceHistories: [
+      { price: item.current_seller.price, trackedDate: currentDateTime },
+    ],
+  };
+  sellers.set(item.current_seller.id.toString(), currentSeller);
+  item.other_sellers.forEach((seller) => {
+    const otherSeller = {
+      storeId: seller.store_id,
+      name: seller.name,
+      slug: seller.slug,
+      sku: seller.sku,
+      logo: seller.logo,
+      productId: seller.product_id,
+      priceHistories: [{ price: seller.price, trackedDate: currentDateTime }],
+    };
+    sellers.set(seller.id.toString(), otherSeller);
+  });
+  return sellers;
 };
 
 app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
@@ -141,7 +165,7 @@ saveChangedPriceShopeeItem = (shopee) => {
   fetch(url)
     .then((extRes) => extRes.json())
     .then((data) => {
-      if (shopee.price_max != data.item.price_max) {
+      if (shopee.price_max !== data.item.price_max) {
         return saveShopeeItem(data.item);
       }
     });

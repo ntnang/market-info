@@ -51,80 +51,37 @@ class Content extends Component {
     );
     fetch("http://localhost:3001/api/tiki/last/history")
       .then((res) => res.json())
-      .then((histories) => {
+      .then((history) => {
         this.setState({
           productHistory: {
             labels: lastSevenWeekDayNames,
-            datasets: this.buildChartDataSet(histories),
+            datasets: this.buildChartDataSet(history),
           },
         });
       });
   }
 
-  buildChartDataSet(productHistories) {
+  buildChartDataSet(productHistory) {
     const datasets = [];
-    if (productHistories.length > 0) {
-      const groupedProductHistories = this.groupProductHistoriesBySeller(
-        productHistories
-      );
-      for (let history of groupedProductHistories.values()) {
-        datasets.push(this.buildLastSevenDaysDataSet(history));
-      }
+    const sellerHistoryMap = new Map(Object.entries(productHistory.sellers));
+    for (let sellerHistory of sellerHistoryMap.values()) {
+      datasets.push(this.buildLastSevenDaysDataSet(sellerHistory));
     }
     return datasets;
   }
 
-  groupProductHistoriesBySeller(productHistories) {
-    const groupedProductHistories = new Map();
-    productHistories.forEach((history) => {
-      const currentSeller = history.current_seller;
-      if (groupedProductHistories.get(currentSeller.id)) {
-        groupedProductHistories.get(currentSeller.id).priceHistories.push({
-          price: currentSeller.price,
-          trackedDate: history.trackedDate,
-        });
-      } else {
-        groupedProductHistories.set(currentSeller.id, {
-          shopName: currentSeller.name,
-          priceHistories: [
-            {
-              price: currentSeller.price,
-              trackedDate: history.trackedDate,
-            },
-          ],
-        });
-        history.other_sellers.forEach((seller) => {
-          if (groupedProductHistories.get(seller.id)) {
-            groupedProductHistories.get(seller.id).priceHistories.push({
-              price: seller.price,
-              trackedDate: history.trackedDate,
-            });
-          } else {
-            groupedProductHistories.set(seller.id, {
-              shopName: seller.name,
-              priceHistories: [
-                { price: seller.price, trackedDate: history.trackedDate },
-              ],
-            });
-          }
-        });
-      }
-    });
-    return groupedProductHistories;
-  }
-
-  buildLastSevenDaysDataSet(productHistoriesBySeller) {
+  buildLastSevenDaysDataSet(sellerHistory) {
     const dataset = {};
-    const lastSevenDaysHistories = productHistoriesBySeller.priceHistories.filter(
+    const lastSevenDaysHistories = sellerHistory.priceHistories.filter(
       (history) => Date.parse(history.trackedDate) > this.getDateThreshold(7)
     );
 
     dataset.data = this.generateChartData(
-      productHistoriesBySeller.priceHistories,
+      sellerHistory.priceHistories,
       lastSevenDaysHistories,
       this.lastSevenDates
     );
-    dataset.label = productHistoriesBySeller.shopName;
+    dataset.label = sellerHistory.name;
     return dataset;
   }
 
@@ -144,9 +101,9 @@ class Content extends Component {
       const historiesOnCurrentDate = inChartRangeHistories.filter((history) => {
         const trackedDate = new Date(history.trackedDate);
         return (
-          trackedDate.getDate() == date.getDate() &&
-          trackedDate.getMonth() == date.getMonth() &&
-          trackedDate.getFullYear() == date.getFullYear()
+          trackedDate.getDate() === date.getDate() &&
+          trackedDate.getMonth() === date.getMonth() &&
+          trackedDate.getFullYear() === date.getFullYear()
         );
       });
       if (historiesOnCurrentDate.length != 0) {
