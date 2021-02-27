@@ -25,7 +25,7 @@ app.get("/api/tiki/:id", async (req, res) => {
   const itemExisted = await Tiki.exists(query);
   if (itemExisted) {
     Tiki.findOne(query).exec((err, tiki) => {
-      const changedItem = saveChangedPriceTikiItem(tiki);
+      const changedItem = checkChangedPriceTikiItem(tiki);
       res.status(200).send(changedItem);
     });
   } else {
@@ -65,26 +65,70 @@ app.get("/api/tiki/last/history/", (req, res) => {
     });
 });
 
-saveChangedPriceTikiItem = (tiki) => {
-  const url = `https://tiki.vn/api/v2/products/${tiki.id}`;
+checkChangedPriceTikiItem = (persistedItem) => {
+  const url = `https://tiki.vn/api/v2/products/${persistedItem.id}`;
   fetch(url, {
     headers: {
       "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
     },
   })
     .then((res) => res.json())
-    .then((item) => {
-      if (tiki.price !== item.price) {
-        return saveTikiItem(item);
-      }
+    .then((beingCheckedItem) => {
+      return updatePriceHistoriesIfChanged(beingCheckedItem, persistedItem);
     });
 };
 
-isAnyTikiPriceChanged = (newItem, lastItem) => {
+updatePriceHistoriesIfChanged = (newItem, lastItem) => {
   let anySellerPriceChanged = false;
+  const currentDateTime = new Date();
+  const newItemSellers = [newItem.current_seller, ...newItem.other_sellers];
+  const lastItemSellers = lastItem.sellers;
+  const ongoingSellers = newItemSellers.filter((seller) =>
+    lastItemSellers.keys().includes(seller.id)
+  );
+  const openSellers = newItemSellers.filter(
+    (seller) => !lastItemSellers.keys().includes(seller.id)
+  );
+  const closedSellers = lastItemSellers.filter(
+    (seller) => !newItemSellers.map((seller) => seller.id).includes(seller.id)
+  );
 
-  if (newItem.current_seller.id === lastItem.current_seller.id)
-    return anySellerPriceChanged;
+  ongoingSellers.forEach((seller) => {
+    const priceHistories = lastItemSellers.get(seller.id).priceHistories;
+    const lastTrack = priceHistories[priceHistories.length - 1];
+    if (seller.price !== lastTrack.price) {
+      priceHistories.push({
+        price: seller.price,
+        trackedDate: currentDateTime,
+      });
+      anySellerPriceChanged = true;
+    }
+  });
+  openSellers.forEach((seller) => {
+    lastItemSellers.set(seller.id.toString(), {
+      storeId: seller.store_id,
+      name: seller.name,
+      slug: seller.slug,
+      sku: seller.sku,
+      logo: seller.logo,
+      productId: seller.product_id,
+      priceHistories: [{ price: seller.price, trackedDate: currentDateTime }],
+    });
+  });
+  closedSellers.forEach((seller) => {
+    lastItemSellers.get(seller.id).priceHistories.push({
+      price: null,
+      trackedDate: currentDateTime,
+    });
+  });
+  if (
+    anySellerPriceChanged ||
+    openSellers.length > 0 ||
+    closedSellers.length > 0
+  ) {
+    lastItem.lastTrackedDate = currentDateTime;
+  }
+  return lastItem;
 };
 
 saveTikiItem = (item) => {
