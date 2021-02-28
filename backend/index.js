@@ -83,18 +83,21 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
   const currentDateTime = new Date();
   const newItemSellers = [newItem.current_seller, ...newItem.other_sellers];
   const lastItemSellers = lastItem.sellers;
+  const lastItemSellerIds = [...lastItemSellers.keys()];
   const ongoingSellers = newItemSellers.filter((seller) =>
-    lastItemSellers.keys().includes(seller.id)
+    lastItemSellerIds.includes(seller.id.toString())
   );
   const openSellers = newItemSellers.filter(
-    (seller) => !lastItemSellers.keys().includes(seller.id)
+    (seller) => !lastItemSellerIds.includes(seller.id.toString())
   );
-  const closedSellers = lastItemSellers.filter(
-    (seller) => !newItemSellers.map((seller) => seller.id).includes(seller.id)
+  const closedSellers = lastItemSellerIds.filter(
+    (sellerId) =>
+      !newItemSellers.map((seller) => seller.id.toString()).includes(sellerId)
   );
 
   ongoingSellers.forEach((seller) => {
-    const priceHistories = lastItemSellers.get(seller.id).priceHistories;
+    const priceHistories = lastItemSellers.get(seller.id.toString())
+      .priceHistories;
     const lastTrack = priceHistories[priceHistories.length - 1];
     if (seller.price !== lastTrack.price) {
       priceHistories.push({
@@ -105,7 +108,7 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
     }
   });
   openSellers.forEach((seller) => {
-    lastItemSellers.set(seller.id.toString(), {
+    lastItemSellers.set(seller.id, {
       storeId: seller.store_id,
       name: seller.name,
       slug: seller.slug,
@@ -115,8 +118,8 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
       priceHistories: [{ price: seller.price, trackedDate: currentDateTime }],
     });
   });
-  closedSellers.forEach((seller) => {
-    lastItemSellers.get(seller.id).priceHistories.push({
+  closedSellers.forEach((sellerId) => {
+    lastItemSellers.get(sellerId).priceHistories.push({
       price: null,
       trackedDate: currentDateTime,
     });
@@ -127,6 +130,7 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
     closedSellers.length > 0
   ) {
     lastItem.lastTrackedDate = currentDateTime;
+    Tiki.updateOne(lastItem);
   }
   return lastItem;
 };
