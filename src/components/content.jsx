@@ -68,7 +68,10 @@ class Content extends Component {
       const lastSevenDaysDataSet = this.buildLastSevenDaysDataSet(
         sellerHistory
       );
-      if (lastSevenDaysDataSet.data.some((data) => data != null)) {
+      if (
+        lastSevenDaysDataSet.data &&
+        lastSevenDaysDataSet.data.some((data) => data !== null)
+      ) {
         datasets.push(lastSevenDaysDataSet);
       }
     }
@@ -80,13 +83,14 @@ class Content extends Component {
     const lastSevenDaysHistories = sellerHistory.priceHistories.filter(
       (history) => Date.parse(history.trackedDate) > this.getDateThreshold(7)
     );
-
-    dataset.data = this.generateChartData(
-      sellerHistory.priceHistories,
-      lastSevenDaysHistories,
-      this.lastSevenDates
-    );
-    dataset.label = sellerHistory.name;
+    if (lastSevenDaysHistories.length !== 0) {
+      dataset.data = this.generateChartData(
+        sellerHistory.priceHistories,
+        lastSevenDaysHistories,
+        this.lastSevenDates
+      );
+      dataset.label = sellerHistory.name;
+    }
     return dataset;
   }
 
