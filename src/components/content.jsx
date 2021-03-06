@@ -65,7 +65,12 @@ class Content extends Component {
     const datasets = [];
     const sellerHistoryMap = new Map(Object.entries(productHistory.sellers));
     for (let sellerHistory of sellerHistoryMap.values()) {
-      datasets.push(this.buildLastSevenDaysDataSet(sellerHistory));
+      const lastSevenDaysDataSet = this.buildLastSevenDaysDataSet(
+        sellerHistory
+      );
+      if (lastSevenDaysDataSet.data.some((data) => data != null)) {
+        datasets.push(lastSevenDaysDataSet);
+      }
     }
     return datasets;
   }
