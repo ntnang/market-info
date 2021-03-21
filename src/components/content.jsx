@@ -49,7 +49,7 @@ class Content extends Component {
     const lastSevenWeekDayNames = this.lastSevenDates.map(
       (date) => this.weekDayNames[date.getDay()]
     );
-    fetch("http://localhost:3001/api/tiki/last/history")
+    fetch("http://localhost:3001/api/last-product/history")
       .then((res) => res.json())
       .then((history) => {
         this.setState({

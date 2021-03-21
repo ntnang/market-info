@@ -1,14 +1,12 @@
 import React, { Component } from "react";
-import Tiki from "./price-tracking/tiki";
-import Shopee from "./price-tracking/shopee";
+import ProductInfo from "./price-tracking/product-info";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 
 class NavBar extends Component {
   state = {
     link: "",
-    isTikiDialogVisible: false,
-    isShopeeDialogVisible: false,
+    isProductInfoDialogVisible: false,
   };
 
   render() {
@@ -45,7 +43,7 @@ class NavBar extends Component {
                 <li className="search-bar input-group">
                   <InputText
                     value={this.state.link}
-                    placeholder="Search Tiki/Shopee"
+                    placeholder="Paste Tiki/Shopee link here..."
                     className="form-control"
                     onChange={this.onInputValueChanged}
                     onKeyDown={this.onSearchKeyDown}
@@ -131,15 +129,10 @@ class NavBar extends Component {
             </div>
           </div>
         </nav>
-        <Tiki
+        <ProductInfo
           link={this.state.link}
-          isDialogVisible={this.state.isTikiDialogVisible}
-          onHide={this.hideTikiDialog}
-        />
-        <Shopee
-          link={this.state.link}
-          isDialogVisible={this.state.isShopeeDialogVisible}
-          onHide={this.hideShopeeDialog}
+          isDialogVisible={this.state.isProductInfoDialogVisible}
+          onHide={this.hideProductInfoDialog}
         />
       </React.Fragment>
     );
@@ -151,54 +144,17 @@ class NavBar extends Component {
 
   onSearchKeyDown = (event) => {
     if (event.key === "Enter") {
-      this.showProductInformation();
+      this.showProductInfoDialog();
     }
   };
 
-  showTikiDialog = () => {
-    this.setState({ isTikiDialogVisible: true });
+  showProductInfoDialog = () => {
+    this.setState({ isProductInfoDialogVisible: true });
   };
 
-  hideTikiDialog = () => {
-    this.setState({ isTikiDialogVisible: false });
+  hideProductInfoDialog = () => {
+    this.setState({ isProductInfoDialogVisible: false });
   };
-
-  showShopeeDialog = () => {
-    this.setState({ isShopeeDialogVisible: true });
-  };
-
-  hideShopeeDialog = () => {
-    this.setState({ isShopeeDialogVisible: false });
-  };
-
-  showProductInformation = () => {
-    switch (this.extractHostname(this.state.link)) {
-      case "tiki.vn":
-        this.showTikiDialog();
-        break;
-      case "shopee.vn":
-        this.showShopeeDialog();
-        break;
-    }
-  };
-
-  extractHostname(url) {
-    var hostname;
-    //find & remove protocol (http, ftp, etc.) and get hostname
-
-    if (url.indexOf("//") > -1) {
-      hostname = url.split("/")[2];
-    } else {
-      hostname = url.split("/")[0];
-    }
-
-    //find & remove port number
-    hostname = hostname.split(":")[0];
-    //find & remove "?"
-    hostname = hostname.split("?")[0];
-
-    return hostname;
-  }
 }
 
 export default NavBar;

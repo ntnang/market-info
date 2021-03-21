@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 
-const tikiSchema = mongoose.Schema({
+const productHistorySchema = mongoose.Schema({
   id: String,
   name: String,
   price: Number,
   thumbnailUrl: String,
+  origin: String,
   sellers: {
     type: Map,
     of: {
@@ -20,4 +21,4 @@ const tikiSchema = mongoose.Schema({
   lastTrackedDate: Date,
 });
 
-module.exports = mongoose.model("Tiki", tikiSchema);
+module.exports = mongoose.model("ProductHistory", productHistorySchema);
