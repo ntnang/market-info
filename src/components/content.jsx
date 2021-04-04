@@ -83,14 +83,12 @@ class Content extends Component {
     const lastSevenDaysHistories = sellerHistory.priceHistories.filter(
       (history) => Date.parse(history.trackedDate) > this.getDateThreshold(7)
     );
-    if (lastSevenDaysHistories.length !== 0) {
-      dataset.data = this.generateChartData(
-        sellerHistory.priceHistories,
-        lastSevenDaysHistories,
-        this.lastSevenDates
-      );
-      dataset.label = sellerHistory.name;
-    }
+    dataset.data = this.generateChartData(
+      sellerHistory.priceHistories,
+      lastSevenDaysHistories,
+      this.lastSevenDates
+    );
+    dataset.label = sellerHistory.name;
     return dataset;
   }
 
