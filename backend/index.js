@@ -9,6 +9,7 @@ const port = 3001;
 const trackingInterval = 86400000; // One day
 
 app.use(cors());
+app.use(express.json());
 
 mongoose.connect("mongodb://localhost/market-info", {
   useNewUrlParser: true,
@@ -20,7 +21,7 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-app.get("/api/tiki/:id", async (req, res) => {
+app.post("/api/tiki/:id", async (req, res) => {
   const query = { id: req.params.id };
   const itemExisted = await ProductHistory.exists(query);
   if (itemExisted) {
@@ -29,17 +30,18 @@ app.get("/api/tiki/:id", async (req, res) => {
       res.status(200).send(changedItem);
     });
   } else {
-    const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
+    // const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
 
-    fetch(url, {
-      headers: {
-        "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
-      },
-    })
-      .then((extRes) => extRes.json())
-      .then((item) => {
-        res.status(201).send(saveTikiItem(item));
-      });
+    // fetch(url, {
+    //   headers: {
+    //     "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
+    //   },
+    // })
+    //   .then((extRes) => extRes.json())
+    //   .then((item) => {
+    console.log(req.body);
+    res.status(201).send(saveTikiItem(JSON.parse(req.body)));
+    // });
   }
 });
 
@@ -139,57 +141,61 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
 
 saveTikiItem = (item) => {
   const currentDateTime = new Date();
-  const tikiItem = new ProductHistory({
-    id: item.id,
-    name: item.name,
-    thumbnail_url: item.thumbnail_url,
-    origin: "tiki",
-    sellers: getAllTikiSellers(item, currentDateTime),
-    lastTrackedDate: currentDateTime,
-  });
-  tikiItem.save((err) => {
+  // const tikiItem = new ProductHistory({
+  //   id: item.id,
+  //   name: item.name,
+  //   thumbnail_url: item.thumbnail_url,
+  //   origin: "tiki",
+  //   sellers: getAllTikiSellers(item, currentDateTime),
+  //   lastTrackedDate: currentDateTime,
+  // });
+  item.lastTrackedDate = currentDateTime;
+  for (let seller of item.sellers) {
+    seller.priceHistories[0].trackedDate = currentDateTime;
+  }
+  item.save((err) => {
     if (err) console.error(err);
   });
-  return tikiItem;
+  return item;
 };
 
-getAllTikiSellers = (item, currentDateTime) => {
-  const sellers = new Map();
-  const currentSeller = {
-    storeId: item.current_seller.store_id,
-    name: item.current_seller.name,
-    slug: item.current_seller.slug,
-    sku: item.current_seller.sku,
-    logo: item.current_seller.logo,
-    productId: item.current_seller.product_id,
-    priceHistories: [
-      { price: item.current_seller.price, trackedDate: currentDateTime },
-    ],
-  };
-  sellers.set(item.current_seller.id.toString(), currentSeller);
-  item.other_sellers.forEach((seller) => {
-    const otherSeller = {
-      storeId: seller.store_id,
-      name: seller.name,
-      slug: seller.slug,
-      sku: seller.sku,
-      logo: seller.logo,
-      productId: seller.product_id,
-      priceHistories: [{ price: seller.price, trackedDate: currentDateTime }],
-    };
-    sellers.set(seller.id.toString(), otherSeller);
-  });
-  return sellers;
-};
+// getAllTikiSellers = (item, currentDateTime) => {
+//   const sellers = new Map();
+//   const currentSeller = {
+//     storeId: item.current_seller.store_id,
+//     name: item.current_seller.name,
+//     slug: item.current_seller.slug,
+//     sku: item.current_seller.sku,
+//     logo: item.current_seller.logo,
+//     productId: item.current_seller.product_id,
+//     priceHistories: [
+//       { price: item.current_seller.price, trackedDate: currentDateTime },
+//     ],
+//   };
+//   sellers.set(item.current_seller.id.toString(), currentSeller);
+//   item.other_sellers.forEach((seller) => {
+//     const otherSeller = {
+//       storeId: seller.store_id,
+//       name: seller.name,
+//       slug: seller.slug,
+//       sku: seller.sku,
+//       logo: seller.logo,
+//       productId: seller.product_id,
+//       priceHistories: [{ price: seller.price, trackedDate: currentDateTime }],
+//     };
+//     sellers.set(seller.id.toString(), otherSeller);
+//   });
+//   return sellers;
+// };
 
-// app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
-//   const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;
-//   fetch(url)
-//     .then((res) => res.json())
-//     .then((data) => {
-//       res.status(200).send(data);
-//     });
-// });
+app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
+  const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;
+  fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      res.status(200).send(data);
+    });
+});
 
 // app.get("/api/shopee/track/:itemId/:shopId", async (req, res) => {
 //   const query = { itemid: req.params.itemId, shopid: req.params.shopId };

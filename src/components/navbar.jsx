@@ -52,7 +52,7 @@ class NavBar extends Component {
                     id="search-button"
                     icon="tim-icons icon-zoom-split"
                     className="p-button-secondary p-button-text"
-                    onClick={this.showProductInformation}
+                    onClick={this.showProductInfoDialog}
                   />
                 </li>
                 <li className="dropdown nav-item">

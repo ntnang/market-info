@@ -78,20 +78,51 @@ class ProductInfo extends Component {
     const productId = this.extractTikiProductId();
     fetch(`https://tiki.vn/api/v2/products/${productId}`)
       .then((res) => res.json())
-      .then((product) => {
-        this.setState({ product });
+      .then((item) => {
+        this.setState({
+          product: {
+            id: item.id,
+            name: item.name,
+            thumbnail_url: item.thumbnail_url,
+            origin: "tiki",
+            sellers: this.getAllTikiSellers(item),
+            lastTrackedDate: null,
+          },
+        });
       });
+  };
+
+  getAllTikiSellers = (item) => {
+    const sellers = new Map();
+    const currentSeller = {
+      storeId: item.current_seller.store_id,
+      name: item.current_seller.name,
+      slug: item.current_seller.slug,
+      sku: item.current_seller.sku,
+      logo: item.current_seller.logo,
+      productId: item.current_seller.product_id,
+      priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
+    };
+    sellers.set(item.current_seller.id.toString(), currentSeller);
+    item.other_sellers.forEach((seller) => {
+      const otherSeller = {
+        storeId: seller.store_id,
+        name: seller.name,
+        slug: seller.slug,
+        sku: seller.sku,
+        logo: seller.logo,
+        productId: seller.product_id,
+        priceHistories: [{ price: seller.price, trackedDate: null }],
+      };
+      sellers.set(seller.id.toString(), otherSeller);
+    });
+    return sellers;
   };
 
   getShopeeProductInformation = () => {
     // use the proxy https://cors-anywhere.herokuapp.com/ to bypass cors from client side
-    const start = this.props.link.lastIndexOf("-i") + 2;
-    const end = this.props.link.length;
-    const idStr = this.props.link.substring(start, end);
-    const ids = idStr.split(".");
-    const itemId = ids[2];
-    const shopId = ids[1];
-    const endPoint = `http://localhost:3001/api/shopee/get/${itemId}/${shopId}`;
+    const ids = this.extractShopeeProductIds();
+    const endPoint = `http://localhost:3001/api/shopee/get/${ids.itemId}/${ids.shopId}`;
     fetch(endPoint)
       .then((res) => res.json())
       .then((data) => {
@@ -100,12 +131,16 @@ class ProductInfo extends Component {
   };
 
   trackProductInformation = () => {
+    console.log(JSON.stringify(this.state.product));
     const productId = this.extractTikiProductId();
-    fetch(`http://localhost:3001/api/tiki/${productId}`)
-      .then((res) => res.json())
-      .then((product) => {
-        this.setState({ product });
-      });
+    fetch(`http://localhost:3001/api/tiki/${productId}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(this.state.product),
+    }).then((res) => res.status(201));
     this.props.onHide();
   };
 
@@ -114,6 +149,14 @@ class ProductInfo extends Component {
     const end = this.props.link.search(".html");
     const productId = this.props.link.substring(start, end);
     return productId;
+  }
+
+  extractShopeeProductIds() {
+    const start = this.props.link.lastIndexOf("-i") + 2;
+    const end = this.props.link.length;
+    const idStr = this.props.link.substring(start, end);
+    const ids = idStr.split(".");
+    return { itemId: ids[2], shopId: ids[1] };
   }
 
   extractHostname(url) {
