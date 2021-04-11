@@ -30,18 +30,7 @@ app.post("/api/tiki/:id", async (req, res) => {
       res.status(200).send(changedItem);
     });
   } else {
-    // const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
-
-    // fetch(url, {
-    //   headers: {
-    //     "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
-    //   },
-    // })
-    //   .then((extRes) => extRes.json())
-    //   .then((item) => {
-    console.log(req.body);
-    res.status(201).send(saveTikiItem(JSON.parse(req.body)));
-    // });
+    res.status(201).send(saveTikiItem(req.body));
   }
 });
 
@@ -141,52 +130,17 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
 
 saveTikiItem = (item) => {
   const currentDateTime = new Date();
-  // const tikiItem = new ProductHistory({
-  //   id: item.id,
-  //   name: item.name,
-  //   thumbnail_url: item.thumbnail_url,
-  //   origin: "tiki",
-  //   sellers: getAllTikiSellers(item, currentDateTime),
-  //   lastTrackedDate: currentDateTime,
-  // });
   item.lastTrackedDate = currentDateTime;
-  for (let seller of item.sellers) {
+  const sellersValue = new Map(item.sellers.value);
+  for (let seller of sellersValue.values()) {
     seller.priceHistories[0].trackedDate = currentDateTime;
   }
-  item.save((err) => {
+  const product = new ProductHistory(item);
+  product.save((err) => {
     if (err) console.error(err);
   });
   return item;
 };
-
-// getAllTikiSellers = (item, currentDateTime) => {
-//   const sellers = new Map();
-//   const currentSeller = {
-//     storeId: item.current_seller.store_id,
-//     name: item.current_seller.name,
-//     slug: item.current_seller.slug,
-//     sku: item.current_seller.sku,
-//     logo: item.current_seller.logo,
-//     productId: item.current_seller.product_id,
-//     priceHistories: [
-//       { price: item.current_seller.price, trackedDate: currentDateTime },
-//     ],
-//   };
-//   sellers.set(item.current_seller.id.toString(), currentSeller);
-//   item.other_sellers.forEach((seller) => {
-//     const otherSeller = {
-//       storeId: seller.store_id,
-//       name: seller.name,
-//       slug: seller.slug,
-//       sku: seller.sku,
-//       logo: seller.logo,
-//       productId: seller.product_id,
-//       priceHistories: [{ price: seller.price, trackedDate: currentDateTime }],
-//     };
-//     sellers.set(seller.id.toString(), otherSeller);
-//   });
-//   return sellers;
-// };
 
 app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
   const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;

@@ -131,7 +131,6 @@ class ProductInfo extends Component {
   };
 
   trackProductInformation = () => {
-    console.log(JSON.stringify(this.state.product));
     const productId = this.extractTikiProductId();
     fetch(`http://localhost:3001/api/tiki/${productId}`, {
       method: "POST",
@@ -139,7 +138,7 @@ class ProductInfo extends Component {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(this.state.product),
+      body: JSON.stringify(this.state.product, this.replacer),
     }).then((res) => res.status(201));
     this.props.onHide();
   };
@@ -175,6 +174,17 @@ class ProductInfo extends Component {
     hostname = hostname.split("?")[0];
 
     return hostname;
+  }
+
+  replacer(key, value) {
+    if (value instanceof Map) {
+      return {
+        dataType: "Map",
+        value: Array.from(value.entries()), // or with spread: value: [...value]
+      };
+    } else {
+      return value;
+    }
   }
 }
 export default ProductInfo;
