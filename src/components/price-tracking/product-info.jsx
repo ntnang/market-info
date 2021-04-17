@@ -132,14 +132,14 @@ class ProductInfo extends Component {
 
   trackProductInformation = () => {
     const productId = this.extractTikiProductId();
-    fetch(`http://localhost:3001/api/tiki/${productId}`, {
+    fetch(`http://localhost:3001/api/product/${productId}`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(this.state.product, this.replacer),
-    }).then((res) => res.status(201));
+    });
     this.props.onHide();
   };
 

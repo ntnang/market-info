@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const ProductHistory = require("./model/product-history");
+const { raw } = require("express");
 // const Shopee = require("./model/shopee");
 const port = 3001;
 const trackingInterval = 86400000; // One day
@@ -21,16 +22,18 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-app.post("/api/tiki/:id", async (req, res) => {
+app.post("/api/product/:id", async (req, res) => {
   const query = { id: req.params.id };
   const itemExisted = await ProductHistory.exists(query);
+  const newProductHistory = refineProductHistoryData(req.body);
   if (itemExisted) {
-    ProductHistory.findOne(query).exec((err, tiki) => {
-      const changedItem = checkChangedPriceTikiItem(tiki);
-      res.status(200).send(changedItem);
+    ProductHistory.findOne(query).exec((err, persistedProductHistory) => {
+      updatePriceHistoriesIfChanged(newProductHistory, persistedProductHistory);
+      res.status(200);
     });
   } else {
-    res.status(201).send(saveTikiItem(req.body));
+    saveProductHistory(newProductHistory);
+    res.status(201);
   }
 });
 
@@ -39,8 +42,10 @@ app.get("/api/tiki/history/:id", async (req, res) => {
   const itemExisted = await ProductHistory.exists(query);
   if (itemExisted) {
     ProductHistory.find(query, (err, tikis) => {
-      res.status(200).send(tikis);
+      res.status(302).send(tikis);
     });
+  } else {
+    res.status(404).send(tikis);
   }
 });
 
@@ -58,7 +63,7 @@ app.get("/api/last-product/history/", (req, res) => {
     });
 });
 
-checkChangedPriceTikiItem = (persistedItem) => {
+checkChangedPriceProduct = (persistedItem) => {
   const url = `https://tiki.vn/api/v2/products/${persistedItem.id}`;
   fetch(url, {
     headers: {
@@ -128,18 +133,23 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
   return lastItem;
 };
 
-saveTikiItem = (item) => {
+saveProductHistory = (productHistoryData) => {
+  const productHistory = new ProductHistory(productHistoryData);
+  productHistory.save((err) => {
+    if (err) console.error(err);
+  });
+};
+
+refineProductHistoryData = (rawProductHistoryData) => {
+  const refinedProductHistoryData = Object.assign({}, rawProductHistoryData);
   const currentDateTime = new Date();
-  item.lastTrackedDate = currentDateTime;
-  const sellersValue = new Map(item.sellers.value);
+  refinedProductHistoryData.lastTrackedDate = currentDateTime;
+  const sellersValue = new Map(rawProductHistoryData.sellers.value);
   for (let seller of sellersValue.values()) {
     seller.priceHistories[0].trackedDate = currentDateTime;
   }
-  const product = new ProductHistory(item);
-  product.save((err) => {
-    if (err) console.error(err);
-  });
-  return item;
+  refinedProductHistoryData.sellers = sellersValue;
+  return refinedProductHistoryData;
 };
 
 app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
@@ -199,7 +209,7 @@ app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
 setInterval(() => {
   ProductHistory.find({}, (err, productHistories) => {
     productHistories.forEach((productHistory) => {
-      checkChangedPriceTikiItem(productHistory);
+      checkChangedPriceProduct(productHistory);
     });
   });
   // Shopee.find({}, (err, shopees) => {
