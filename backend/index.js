@@ -37,7 +37,7 @@ app.post("/api/product/:id", async (req, res) => {
   }
 });
 
-app.get("/api/tiki/history/:id", async (req, res) => {
+app.get("/api/product/history/:id", async (req, res) => {
   const query = { id: req.params.id };
   const itemExisted = await ProductHistory.exists(query);
   if (itemExisted) {
@@ -63,41 +63,45 @@ app.get("/api/last-product/history/", (req, res) => {
     });
 });
 
-checkChangedPriceProduct = (persistedItem) => {
-  const url = `https://tiki.vn/api/v2/products/${persistedItem.id}`;
+checkChangedPriceProduct = (persistedProduct) => {
+  const url = `https://tiki.vn/api/v2/products/${persistedProduct.id}`;
   fetch(url, {
     headers: {
       "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
     },
   })
     .then((res) => res.json())
-    .then((beingCheckedItem) => {
-      return updatePriceHistoriesIfChanged(beingCheckedItem, persistedItem);
+    .then((newProduct) => {
+      const newSellers = [
+        newProduct.current_seller,
+        ...newProduct.other_sellers,
+      ];
+      return updatePriceHistoriesIfChanged(newSellers, persistedProduct);
     });
 };
 
-updatePriceHistoriesIfChanged = (newItem, lastItem) => {
+updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
   let anySellerPriceChanged = false;
   const currentDateTime = new Date();
-  const newItemSellers = [newItem.current_seller, ...newItem.other_sellers];
-  const lastItemSellers = lastItem.sellers;
-  const lastItemSellerIds = [...lastItemSellers.keys()];
-  const ongoingSellers = newItemSellers.filter((seller) =>
-    lastItemSellerIds.includes(seller.id.toString())
+  const newSellers = newProductHistory.sellers;
+  const newSellerIds = Array.from(newSellers.keys());
+  const persistedProductSellers = persistedProduct.sellers;
+  const persistedProductSellerIds = [...persistedProductSellers.keys()];
+  const ongoingSellerIds = newSellerIds.filter((sellerId) =>
+    persistedProductSellerIds.includes(sellerId)
   );
-  const openSellers = newItemSellers.filter(
-    (seller) => !lastItemSellerIds.includes(seller.id.toString())
+  const openSellerIds = newSellerIds.filter(
+    (sellerId) => !persistedProductSellerIds.includes(sellerId)
   );
-  const closedSellers = lastItemSellerIds.filter(
-    (sellerId) =>
-      !newItemSellers.map((seller) => seller.id.toString()).includes(sellerId)
+  const closedSellerIds = persistedProductSellerIds.filter(
+    (sellerId) => !newSellerIds.includes(sellerId)
   );
 
-  ongoingSellers.forEach((seller) => {
-    const priceHistories = lastItemSellers.get(seller.id.toString())
-      .priceHistories;
-    const lastTrack = priceHistories[priceHistories.length - 1];
-    if (seller.price !== lastTrack.price) {
+  ongoingSellerIds.forEach((sellerId) => {
+    const priceHistories = persistedProductSellers.get(sellerId).priceHistories;
+    const lastPriceHistory = priceHistories[priceHistories.length - 1];
+    const newPriceHistory = newSellers.get(sellerId).priceHistories[0];
+    if (newPriceHistory.price !== lastPriceHistory.price) {
       priceHistories.push({
         price: seller.price,
         trackedDate: currentDateTime,
@@ -105,32 +109,35 @@ updatePriceHistoriesIfChanged = (newItem, lastItem) => {
       anySellerPriceChanged = true;
     }
   });
-  openSellers.forEach((seller) => {
-    lastItemSellers.set(seller.id, {
-      storeId: seller.store_id,
-      name: seller.name,
-      slug: seller.slug,
-      sku: seller.sku,
-      logo: seller.logo,
-      productId: seller.product_id,
-      priceHistories: [{ price: seller.price, trackedDate: currentDateTime }],
+  openSellerIds.forEach((sellerId) => {
+    const newSeller = newSellers.get(sellerId);
+    persistedProductSellers.set(sellerId, {
+      storeId: newSeller.store_id,
+      name: newSeller.name,
+      slug: newSeller.slug,
+      sku: newSeller.sku,
+      logo: newSeller.logo,
+      productId: newSeller.product_id,
+      priceHistories: [
+        { price: newSeller.price, trackedDate: currentDateTime },
+      ],
     });
   });
-  closedSellers.forEach((sellerId) => {
-    lastItemSellers.get(sellerId).priceHistories.push({
+  closedSellerIds.forEach((sellerId) => {
+    persistedProductSellers.get(sellerId).priceHistories.push({
       price: null,
       trackedDate: currentDateTime,
     });
   });
   if (
     anySellerPriceChanged ||
-    openSellers.length > 0 ||
-    closedSellers.length > 0
+    openSellerIds.length > 0 ||
+    closedSellerIds.length > 0
   ) {
-    lastItem.lastTrackedDate = currentDateTime;
-    ProductHistory.updateOne(lastItem);
+    persistedProduct.lastTrackedDate = currentDateTime;
+    ProductHistory.updateOne(persistedProduct);
   }
-  return lastItem;
+  return persistedProduct;
 };
 
 saveProductHistory = (productHistoryData) => {
