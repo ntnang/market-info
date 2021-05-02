@@ -76,47 +76,11 @@ class ProductInfo extends Component {
 
   getTikiProductInformation = () => {
     const productId = this.extractTikiProductId();
-    fetch(`https://tiki.vn/api/v2/products/${productId}`)
+    fetch(`http://localhost:3001/api/tiki/product/history/${productId}`)
       .then((res) => res.json())
-      .then((item) => {
-        this.setState({
-          product: {
-            id: item.id,
-            name: item.name,
-            thumbnail_url: item.thumbnail_url,
-            origin: "tiki",
-            sellers: this.getAllTikiSellers(item),
-            lastTrackedDate: null,
-          },
-        });
+      .then((product) => {
+        this.setState({ product });
       });
-  };
-
-  getAllTikiSellers = (item) => {
-    const sellers = new Map();
-    const currentSeller = {
-      storeId: item.current_seller.store_id,
-      name: item.current_seller.name,
-      slug: item.current_seller.slug,
-      sku: item.current_seller.sku,
-      logo: item.current_seller.logo,
-      productId: item.current_seller.product_id,
-      priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
-    };
-    sellers.set(item.current_seller.id.toString(), currentSeller);
-    item.other_sellers.forEach((seller) => {
-      const otherSeller = {
-        storeId: seller.store_id,
-        name: seller.name,
-        slug: seller.slug,
-        sku: seller.sku,
-        logo: seller.logo,
-        productId: seller.product_id,
-        priceHistories: [{ price: seller.price, trackedDate: null }],
-      };
-      sellers.set(seller.id.toString(), otherSeller);
-    });
-    return sellers;
   };
 
   getShopeeProductInformation = () => {

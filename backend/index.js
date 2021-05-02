@@ -22,30 +22,24 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-app.post("/api/product/:id", async (req, res) => {
-  const query = { id: req.params.id };
-  const itemExisted = await ProductHistory.exists(query);
-  const newProductHistory = refineProductHistoryData(req.body);
-  if (itemExisted) {
-    ProductHistory.findOne(query).exec((err, persistedProductHistory) => {
-      updatePriceHistoriesIfChanged(newProductHistory, persistedProductHistory);
-      res.status(200);
-    });
-  } else {
-    saveProductHistory(newProductHistory);
-    res.status(201);
-  }
-});
-
-app.get("/api/product/history/:id", async (req, res) => {
-  const query = { id: req.params.id };
+app.get("/api/:origin/product/history/:id", async (req, res) => {
+  const query = { id: req.params.id, origin: req.params.origin };
   const itemExisted = await ProductHistory.exists(query);
   if (itemExisted) {
-    ProductHistory.find(query, (err, tikis) => {
-      res.status(302).send(tikis);
+    ProductHistory.findOne(query, (err, productHistory) => {
+      res.status(302).send(productHistory);
     });
   } else {
-    res.status(404).send(tikis);
+    const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
+    fetch(url, {
+      headers: {
+        "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
+      },
+    })
+      .then((res) => res.json())
+      .then((item) => {
+        res.status(305).send(convertTikiItemToProductHistoryModel(item));
+      });
   }
 });
 
@@ -63,6 +57,21 @@ app.get("/api/last-product/history/", (req, res) => {
     });
 });
 
+app.post("/api/product/:id", async (req, res) => {
+  const query = { id: req.params.id };
+  const itemExisted = await ProductHistory.exists(query);
+  const newProductHistory = refineProductHistoryData(req.body);
+  if (itemExisted) {
+    ProductHistory.findOne(query).exec((err, persistedProductHistory) => {
+      updatePriceHistoriesIfChanged(newProductHistory, persistedProductHistory);
+      res.status(200);
+    });
+  } else {
+    saveProductHistory(newProductHistory);
+    res.status(201);
+  }
+});
+
 checkChangedPriceProduct = (persistedProduct) => {
   const url = `https://tiki.vn/api/v2/products/${persistedProduct.id}`;
   fetch(url, {
@@ -71,12 +80,11 @@ checkChangedPriceProduct = (persistedProduct) => {
     },
   })
     .then((res) => res.json())
-    .then((newProduct) => {
-      const newSellers = [
-        newProduct.current_seller,
-        ...newProduct.other_sellers,
-      ];
-      return updatePriceHistoriesIfChanged(newSellers, persistedProduct);
+    .then((item) => {
+      return updatePriceHistoriesIfChanged(
+        convertTikiItemToProductHistoryModel(item),
+        persistedProduct
+      );
     });
 };
 
@@ -157,6 +165,44 @@ refineProductHistoryData = (rawProductHistoryData) => {
   }
   refinedProductHistoryData.sellers = sellersValue;
   return refinedProductHistoryData;
+};
+
+convertTikiItemToProductHistoryModel = (tikiItem) => {
+  return {
+    id: tikiItem.id,
+    name: tikiItem.name,
+    thumbnail_url: tikiItem.thumbnail_url,
+    origin: "tiki",
+    sellers: getAllTikiSellers(tikiItem),
+    lastTrackedDate: null,
+  };
+};
+
+getAllTikiSellers = (item) => {
+  const sellers = new Map();
+  const currentSeller = {
+    storeId: item.current_seller.store_id,
+    name: item.current_seller.name,
+    slug: item.current_seller.slug,
+    sku: item.current_seller.sku,
+    logo: item.current_seller.logo,
+    productId: item.current_seller.product_id,
+    priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
+  };
+  sellers.set(item.current_seller.id.toString(), currentSeller);
+  item.other_sellers.forEach((seller) => {
+    const otherSeller = {
+      storeId: seller.store_id,
+      name: seller.name,
+      slug: seller.slug,
+      sku: seller.sku,
+      logo: seller.logo,
+      productId: seller.product_id,
+      priceHistories: [{ price: seller.price, trackedDate: null }],
+    };
+    sellers.set(seller.id.toString(), otherSeller);
+  });
+  return sellers;
 };
 
 app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
