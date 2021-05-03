@@ -38,7 +38,9 @@ app.get("/api/:origin/product/history/:id", async (req, res) => {
     })
       .then((res) => res.json())
       .then((item) => {
-        res.status(305).send(convertTikiItemToProductHistoryModel(item));
+        const productHistory = convertTikiItemToProductHistoryModel(item);
+        productHistory.sellers = Array.from(productHistory.sellers);
+        res.status(305).send(productHistory);
       });
   }
 });
