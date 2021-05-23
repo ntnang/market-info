@@ -14,11 +14,8 @@ class ProductInfo extends Component {
       thumbnailUrl: "",
       origin: "",
       sellers: {
-        id: "",
         store_id: "",
         name: "",
-        slug: "",
-        sku: "",
         price: "",
         logo: "",
         product_id: "",
@@ -80,7 +77,6 @@ class ProductInfo extends Component {
       .then((res) => res.json())
       .then((product) => {
         product.sellers = new Map(product.sellers);
-        console.log(product);
         this.setState({ product });
       });
   };
@@ -88,11 +84,12 @@ class ProductInfo extends Component {
   getShopeeProductInformation = () => {
     // use the proxy https://cors-anywhere.herokuapp.com/ to bypass cors from client side
     const ids = this.extractShopeeProductIds();
-    const endPoint = `http://localhost:3001/api/shopee/get/${ids.itemId}/${ids.shopId}`;
+    const endPoint = `http://localhost:3001/api/shopee/product/history/${ids.itemId}/${ids.shopId}`;
     fetch(endPoint)
       .then((res) => res.json())
-      .then((data) => {
-        this.setState({ item: data.item });
+      .then((product) => {
+        product.sellers = new Map(product.sellers);
+        this.setState({ product });
       });
   };
 

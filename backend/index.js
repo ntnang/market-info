@@ -4,8 +4,6 @@ const mongoose = require("mongoose");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const ProductHistory = require("./model/product-history");
-const { raw } = require("express");
-// const Shopee = require("./model/shopee");
 const port = 3001;
 const trackingInterval = 86400000; // One day
 
@@ -22,26 +20,17 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-app.get("/api/:origin/product/history/:id", async (req, res) => {
-  const query = { id: req.params.id, origin: req.params.origin };
+app.get("/api/:origin/product/history/:itemId/:shopId?", async (req, res) => {
+  const query = { id: req.params.itemId, origin: req.params.origin };
   const itemExisted = await ProductHistory.exists(query);
   if (itemExisted) {
     ProductHistory.findOne(query, (err, productHistory) => {
       res.status(302).send(productHistory);
     });
-  } else {
-    const url = `https://tiki.vn/api/v2/products/${req.params.id}`;
-    fetch(url, {
-      headers: {
-        "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
-      },
-    })
-      .then((res) => res.json())
-      .then((item) => {
-        const productHistory = convertTikiItemToProductHistoryModel(item);
-        productHistory.sellers = Array.from(productHistory.sellers);
-        res.status(305).send(productHistory);
-      });
+  } else if (req.params.origin == "tiki") {
+    fetchTikiProductData(req.params.itemId);
+  } else if (req.params.origin == "shopee") {
+    fetchShopeeProductData(req.params.itemId, req.params.shopId);
   }
 });
 
@@ -73,6 +62,21 @@ app.post("/api/product/:id", async (req, res) => {
     res.status(201);
   }
 });
+
+fetchTikiProductData = (id) => {
+  const url = `https://tiki.vn/api/v2/products/${id}`;
+  fetch(url, {
+    headers: {
+      "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
+    },
+  })
+    .then((res) => res.json())
+    .then((item) => {
+      const productHistory = convertTikiItemToProductHistoryModel(item);
+      productHistory.sellers = Array.from(productHistory.sellers);
+      res.status(305).send(productHistory);
+    });
+};
 
 checkChangedPriceProduct = (persistedProduct) => {
   const url = `https://tiki.vn/api/v2/products/${persistedProduct.id}`;
@@ -173,11 +177,19 @@ convertTikiItemToProductHistoryModel = (tikiItem) => {
   return {
     id: tikiItem.id,
     name: tikiItem.name,
-    thumbnail_url: tikiItem.thumbnail_url,
+    imagesUrls: getAllTikiImageUrls(tikiItem),
     origin: "tiki",
     sellers: getAllTikiSellers(tikiItem),
     lastTrackedDate: null,
   };
+};
+
+getAllTikiImageUrls = (item) => {
+  const imageUrls = [];
+  item.images.forEach((image) => {
+    imageUrls.push(image.base_url);
+  });
+  return imageUrls;
 };
 
 getAllTikiSellers = (item) => {
@@ -185,9 +197,7 @@ getAllTikiSellers = (item) => {
   const currentSeller = {
     storeId: item.current_seller.store_id,
     name: item.current_seller.name,
-    slug: item.current_seller.slug,
-    sku: item.current_seller.sku,
-    logo: item.current_seller.logo,
+    logoUrl: item.current_seller.logo,
     productId: item.current_seller.product_id,
     priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
   };
@@ -196,9 +206,7 @@ getAllTikiSellers = (item) => {
     const otherSeller = {
       storeId: seller.store_id,
       name: seller.name,
-      slug: seller.slug,
-      sku: seller.sku,
-      logo: seller.logo,
+      logoUrl: seller.logo,
       productId: seller.product_id,
       priceHistories: [{ price: seller.price, trackedDate: null }],
     };
@@ -207,14 +215,33 @@ getAllTikiSellers = (item) => {
   return sellers;
 };
 
-app.get("/api/shopee/get/:itemId/:shopId", (req, res) => {
-  const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;
+fetchShopeeProductData = (itemId, shopId) => {
+  const url = `https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
   fetch(url)
     .then((res) => res.json())
     .then((data) => {
       res.status(200).send(data);
     });
-});
+};
+
+convertShopeeItemToProductHistoryModel = (shopeeItem) => {
+  return {
+    id: shopeeItem.itemid,
+    name: shopeeItem.name,
+    imagesUrls: getAllShopeeImageUrls(shopeeItem),
+    origin: "shopee",
+    sellers: getAllShopeeSellers(shopeeItem),
+    lastTrackedDate: null,
+  };
+};
+
+getAllShopeeImageUrls = (item) => {
+  const imageUrls = [];
+  item.images.forEach((imageHashCode) => {
+    imageUrls.push(`https://cf.shopee.vn/file/${imageHashCode}`);
+  });
+  return imageUrls;
+};
 
 // app.get("/api/shopee/track/:itemId/:shopId", async (req, res) => {
 //   const query = { itemid: req.params.itemId, shopid: req.params.shopId };
