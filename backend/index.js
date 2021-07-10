@@ -28,9 +28,13 @@ app.get("/api/:origin/product/history/:itemId/:shopId?", async (req, res) => {
       res.status(302).send(productHistory);
     });
   } else if (req.params.origin == "tiki") {
-    fetchTikiProductData(req.params.itemId);
+    fetchTikiProductData(req.params.itemId).then((tikiProductHistory) =>
+      res.status(305).send(tikiProductHistory)
+    );
   } else if (req.params.origin == "shopee") {
-    fetchShopeeProductData(req.params.itemId, req.params.shopId);
+    fetchShopeeProductData(req.params.itemId, req.params.shopId).then(
+      (shopeeProductHistory) => res.status(305).send(shopeeProductHistory)
+    );
   }
 });
 
@@ -65,7 +69,7 @@ app.post("/api/product/:id", async (req, res) => {
 
 fetchTikiProductData = (id) => {
   const url = `https://tiki.vn/api/v2/products/${id}`;
-  fetch(url, {
+  return fetch(url, {
     headers: {
       "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
     },
@@ -74,7 +78,7 @@ fetchTikiProductData = (id) => {
     .then((item) => {
       const productHistory = convertTikiItemToProductHistoryModel(item);
       productHistory.sellers = Array.from(productHistory.sellers);
-      res.status(305).send(productHistory);
+      return productHistory;
     });
 };
 
@@ -195,19 +199,15 @@ getAllTikiImageUrls = (item) => {
 getAllTikiSellers = (item) => {
   const sellers = new Map();
   const currentSeller = {
-    storeId: item.current_seller.store_id,
     name: item.current_seller.name,
     logoUrl: item.current_seller.logo,
-    productId: item.current_seller.product_id,
     priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
   };
   sellers.set(item.current_seller.id.toString(), currentSeller);
   item.other_sellers.forEach((seller) => {
     const otherSeller = {
-      storeId: seller.store_id,
       name: seller.name,
       logoUrl: seller.logo,
-      productId: seller.product_id,
       priceHistories: [{ price: seller.price, trackedDate: null }],
     };
     sellers.set(seller.id.toString(), otherSeller);
@@ -217,10 +217,12 @@ getAllTikiSellers = (item) => {
 
 fetchShopeeProductData = (itemId, shopId) => {
   const url = `https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
-  fetch(url)
+  return fetch(url)
     .then((res) => res.json())
-    .then((data) => {
-      res.status(200).send(data);
+    .then((item) => {
+      const productHistory = convertShopeeItemToProductHistoryModel(item);
+      productHistory.sellers = Array.from(productHistory.sellers);
+      return productHistory;
     });
 };
 
@@ -230,7 +232,10 @@ convertShopeeItemToProductHistoryModel = (shopeeItem) => {
     name: shopeeItem.name,
     imagesUrls: getAllShopeeImageUrls(shopeeItem),
     origin: "shopee",
-    sellers: getAllShopeeSellers(shopeeItem),
+    sellers: getShopeeSellerMap(
+      fetchShopeeSeller(shopeeItem.shopId),
+      shopeeItem.price_max
+    ),
     lastTrackedDate: null,
   };
 };
@@ -243,50 +248,28 @@ getAllShopeeImageUrls = (item) => {
   return imageUrls;
 };
 
-// app.get("/api/shopee/track/:itemId/:shopId", async (req, res) => {
-//   const query = { itemid: req.params.itemId, shopid: req.params.shopId };
-//   const itemExisted = await Shopee.exists(query);
-//   if (itemExisted) {
-//     Shopee.findOne(query)
-//       .sort({ trackedDate: -1 })
-//       .exec((err, shopee) => {
-//         const changedItem = saveChangedPriceShopeeItem(shopee);
-//         res.status(200).send(changedItem);
-//       });
-//   } else {
-//     const url = `https://shopee.vn/api/v2/item/get?itemid=${req.params.itemId}&shopid=${req.params.shopId}`;
-//     fetch(url)
-//       .then((extRes) => extRes.json())
-//       .then((data) => {
-//         res.status(201).send(saveShopeeItem(data.item));
-//       });
-//   }
-// });
+fetchShopeeSeller = async (shopId) => {
+  const url = `https://shopee.vn/api/v4/product/get_shop_info?shopid=${shopId}`;
+  return await fetch(url)
+    .then((res) => res.json())
+    .then((shop) => {
+      return {
+        id: shop.shopid,
+        name: shop.name,
+        logoUrl: `https://cf.shopee.vn/file/${shop.account.portrait}`,
+      };
+    });
+};
 
-// saveChangedPriceShopeeItem = (shopee) => {
-//   const url = `https://shopee.vn/api/v2/item/get?itemid=${shopee.itemid}&shopid=${shopee.shopid}`;
-//   fetch(url)
-//     .then((extRes) => extRes.json())
-//     .then((data) => {
-//       if (shopee.price_max !== data.item.price_max) {
-//         return saveShopeeItem(data.item);
-//       }
-//     });
-// };
-
-// saveShopeeItem = (item) => {
-//   const shopeeItem = new Shopee({
-//     itemid: item.itemid,
-//     shopid: item.shopid,
-//     name: item.name,
-//     price_max: item.price_max,
-//     trackedDate: new Date(),
-//   });
-//   shopeeItem.save((err) => {
-//     if (err) console.error(err);
-//   });
-//   return shopeeItem;
-// };
+getShopeeSellerMap = (shopeeSeller, price) => {
+  const sellers = new Map();
+  const currentSeller = {
+    name: shopeeSeller.name,
+    logoUrl: shopeeSeller.logo.logoUrl,
+    priceHistories: [{ price: price, trackedDate: null }],
+  };
+  sellers.set(shopeeSeller.id, currentSeller);
+};
 
 setInterval(() => {
   ProductHistory.find({}, (err, productHistories) => {
@@ -294,11 +277,6 @@ setInterval(() => {
       checkChangedPriceProduct(productHistory);
     });
   });
-  // Shopee.find({}, (err, shopees) => {
-  //   shopees.forEach((shopee) => {
-  //     saveChangedPriceShopeeItem(shopee);
-  //   });
-  // });
 }, trackingInterval);
 
 app.listen(port, () => console.log(`Listening on port ${port}...`));
