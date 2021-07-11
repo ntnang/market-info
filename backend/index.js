@@ -219,8 +219,8 @@ fetchShopeeProductData = (itemId, shopId) => {
   const url = `https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
   return fetch(url)
     .then((res) => res.json())
-    .then((shopee) => {
-      const productHistory = convertShopeeItemToProductHistoryModel(
+    .then(async (shopee) => {
+      const productHistory = await convertShopeeItemToProductHistoryModel(
         shopee.item
       );
       productHistory.sellers = Array.from(productHistory.sellers);
@@ -228,16 +228,14 @@ fetchShopeeProductData = (itemId, shopId) => {
     });
 };
 
-convertShopeeItemToProductHistoryModel = (shopeeItem) => {
+convertShopeeItemToProductHistoryModel = async (shopeeItem) => {
+  const shopeeSeller = await fetchShopeeSeller(shopeeItem.shopid);
   return {
     id: shopeeItem.itemid,
     name: shopeeItem.name,
     imagesUrls: getAllShopeeImageUrls(shopeeItem),
     origin: "shopee",
-    sellers: getShopeeSellerMap(
-      fetchShopeeSeller(shopeeItem.shopid),
-      shopeeItem.price_max
-    ),
+    sellers: getShopeeSellerMap(shopeeSeller, shopeeItem.price_max),
     lastTrackedDate: null,
   };
 };
@@ -250,9 +248,9 @@ getAllShopeeImageUrls = (item) => {
   return imageUrls;
 };
 
-fetchShopeeSeller = async (shopId) => {
+fetchShopeeSeller = (shopId) => {
   const url = `https://shopee.vn/api/v4/product/get_shop_info?shopid=${shopId}`;
-  return await fetch(url)
+  return fetch(url)
     .then((res) => res.json())
     .then((shop) => {
       const shopData = shop.data;
@@ -266,15 +264,12 @@ fetchShopeeSeller = async (shopId) => {
 
 getShopeeSellerMap = (shopeeSeller, price) => {
   const sellers = new Map();
-  shopeeSeller.then((seller) => {
-    const currentSeller = {
-      name: seller.name,
-      logoUrl: seller.logoUrl,
-      priceHistories: [{ price: price, trackedDate: null }],
-    };
-    sellers.set(seller.id.toString(), currentSeller);
-  });
-  console.log(sellers);
+  const currentSeller = {
+    name: shopeeSeller.name,
+    logoUrl: shopeeSeller.logoUrl,
+    priceHistories: [{ price: price, trackedDate: null }],
+  };
+  sellers.set(shopeeSeller.id.toString(), currentSeller);
   return sellers;
 };
 
