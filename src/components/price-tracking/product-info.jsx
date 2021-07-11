@@ -73,13 +73,10 @@ class ProductInfo extends Component {
 
   getTikiProductInformation = () => {
     const productId = this.extractTikiProductId();
-    console.log(productId);
     fetch(`http://localhost:3001/api/tiki/product/history/${productId}`)
       .then((res) => res.json())
       .then((product) => {
         product.sellers = new Map(product.sellers);
-        console.log('test');
-        console.log(product);
         this.setState({ product });
       });
   };

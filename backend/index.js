@@ -219,8 +219,10 @@ fetchShopeeProductData = (itemId, shopId) => {
   const url = `https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
   return fetch(url)
     .then((res) => res.json())
-    .then((item) => {
-      const productHistory = convertShopeeItemToProductHistoryModel(item);
+    .then((shopee) => {
+      const productHistory = convertShopeeItemToProductHistoryModel(
+        shopee.item
+      );
       productHistory.sellers = Array.from(productHistory.sellers);
       return productHistory;
     });
@@ -233,7 +235,7 @@ convertShopeeItemToProductHistoryModel = (shopeeItem) => {
     imagesUrls: getAllShopeeImageUrls(shopeeItem),
     origin: "shopee",
     sellers: getShopeeSellerMap(
-      fetchShopeeSeller(shopeeItem.shopId),
+      fetchShopeeSeller(shopeeItem.shopid),
       shopeeItem.price_max
     ),
     lastTrackedDate: null,
@@ -253,22 +255,27 @@ fetchShopeeSeller = async (shopId) => {
   return await fetch(url)
     .then((res) => res.json())
     .then((shop) => {
+      const shopData = shop.data;
       return {
-        id: shop.shopid,
-        name: shop.name,
-        logoUrl: `https://cf.shopee.vn/file/${shop.account.portrait}`,
+        id: shopData.shopid,
+        name: shopData.name,
+        logoUrl: `https://cf.shopee.vn/file/${shopData.account.portrait}`,
       };
     });
 };
 
 getShopeeSellerMap = (shopeeSeller, price) => {
   const sellers = new Map();
-  const currentSeller = {
-    name: shopeeSeller.name,
-    logoUrl: shopeeSeller.logo.logoUrl,
-    priceHistories: [{ price: price, trackedDate: null }],
-  };
-  sellers.set(shopeeSeller.id, currentSeller);
+  shopeeSeller.then((seller) => {
+    const currentSeller = {
+      name: seller.name,
+      logoUrl: seller.logoUrl,
+      priceHistories: [{ price: price, trackedDate: null }],
+    };
+    sellers.set(seller.id.toString(), currentSeller);
+  });
+  console.log(sellers);
+  return sellers;
 };
 
 setInterval(() => {
