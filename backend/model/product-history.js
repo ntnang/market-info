@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const productHistorySchema = mongoose.Schema({
   id: String,
   name: String,
-  price: Number,
   imagesUrls: [String],
   origin: String,
   sellers: {

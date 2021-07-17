@@ -9,7 +9,6 @@ class ProductInfo extends Component {
   state = {
     product: {
       name: null,
-      price: null,
       imagesUrls: null,
       origin: null,
       sellers: null,
