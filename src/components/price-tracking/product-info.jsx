@@ -8,18 +8,12 @@ import "primeicons/primeicons.css";
 class ProductInfo extends Component {
   state = {
     product: {
-      id: "",
-      name: "",
-      price: 0,
-      thumbnailUrl: "",
-      origin: "",
-      sellers: {
-        store_id: "",
-        name: "",
-        price: "",
-        logo: "",
-        product_id: "",
-      },
+      name: null,
+      price: null,
+      imagesUrls: null,
+      origin: null,
+      sellers: null,
+      lastTrackedDate: null,
     },
   };
 
