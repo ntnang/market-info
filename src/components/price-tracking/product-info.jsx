@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
+import { Carousel } from "primereact/carousel";
+import { Dialog } from "primereact/dialog";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -8,10 +9,10 @@ import "primeicons/primeicons.css";
 class ProductInfo extends Component {
   state = {
     product: {
-      name: null,
-      imagesUrls: null,
-      origin: null,
-      sellers: null,
+      name: "",
+      imagesUrls: [],
+      origin: "",
+      sellers: [],
       lastTrackedDate: null,
     },
   };
@@ -36,6 +37,10 @@ class ProductInfo extends Component {
     );
   }
 
+  getImageTemplateForCarousel = (imgUrl) => {
+    return <img src={imgUrl} />;
+  };
+
   render() {
     return (
       <Dialog
@@ -48,7 +53,10 @@ class ProductInfo extends Component {
         modal
       >
         <div>{this.state.product.name}</div>
-        <div>{this.state.product.price}</div>
+        <Carousel
+          value={this.state.product.imagesUrls}
+          itemTemplate={this.getImageTemplateForCarousel}
+        />
       </Dialog>
     );
   }
