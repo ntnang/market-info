@@ -4,8 +4,9 @@ const mongoose = require("mongoose");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const ProductHistory = require("./model/product-history");
-const port = 3001;
-const trackingInterval = 86400000; // One day
+const PORT = 3001;
+const TRACKING_INTERVAL = 86400000; // One day
+const SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
 
 app.use(cors());
 app.use(express.json());
@@ -264,10 +265,11 @@ fetchShopeeSeller = (shopId) => {
 
 getShopeeSellerMap = (shopeeSeller, price) => {
   const sellers = new Map();
+  const shortenedPrice = price / SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE;
   const currentSeller = {
     name: shopeeSeller.name,
     logoUrl: shopeeSeller.logoUrl,
-    priceHistories: [{ price: price, trackedDate: null }],
+    priceHistories: [{ price: shortenedPrice, trackedDate: null }],
   };
   sellers.set(shopeeSeller.id.toString(), currentSeller);
   return sellers;
@@ -279,6 +281,6 @@ setInterval(() => {
       checkChangedPriceProduct(productHistory);
     });
   });
-}, trackingInterval);
+}, TRACKING_INTERVAL);
 
-app.listen(port, () => console.log(`Listening on port ${port}...`));
+app.listen(PORT, () => console.log(`Listening on port ${PORT}...`));
