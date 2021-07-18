@@ -77,7 +77,9 @@ class ProductInfo extends Component {
     fetch(`http://localhost:3001/api/tiki/product/history/${productId}`)
       .then((res) => res.json())
       .then((product) => {
-        product.sellers = new Map(product.sellers);
+        if (Array.isArray(product.sellers)) {
+          product.sellers = new Map(product.sellers);
+        }
         this.setState({ product });
       });
   };
@@ -89,7 +91,9 @@ class ProductInfo extends Component {
     fetch(endPoint)
       .then((res) => res.json())
       .then((product) => {
-        product.sellers = new Map(product.sellers);
+        if (Array.isArray(product.sellers)) {
+          product.sellers = new Map(product.sellers);
+        }
         this.setState({ product });
       });
   };
