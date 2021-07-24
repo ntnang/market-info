@@ -122,7 +122,7 @@ updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
     const newPriceHistory = newSellers.get(sellerId).priceHistories[0];
     if (newPriceHistory.price !== lastPriceHistory.price) {
       priceHistories.push({
-        price: seller.price,
+        price: newPriceHistory.price,
         trackedDate: currentDateTime,
       });
       anySellerPriceChanged = true;
@@ -154,7 +154,7 @@ updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
     closedSellerIds.length > 0
   ) {
     persistedProduct.lastTrackedDate = currentDateTime;
-    ProductHistory.updateOne(persistedProduct);
+    persistedProduct.save();
   }
   return persistedProduct;
 };
@@ -276,6 +276,7 @@ getShopeeSellerMap = (shopeeSeller, price) => {
 };
 
 setInterval(() => {
+  console.log("TRACKING...");
   ProductHistory.find({}, (err, productHistories) => {
     productHistories.forEach((productHistory) => {
       checkChangedPriceProduct(productHistory);
