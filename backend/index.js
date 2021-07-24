@@ -21,14 +21,8 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-app.get("/api/:origin/product/history/:itemId/:shopId?", async (req, res) => {
-  const query = { id: req.params.itemId, origin: req.params.origin };
-  const itemExisted = await ProductHistory.exists(query);
-  if (itemExisted) {
-    ProductHistory.findOne(query, (err, productHistory) => {
-      res.status(302).send(productHistory);
-    });
-  } else if (req.params.origin == "tiki") {
+app.get("/api/:origin/product/history/:itemId/:shopId?", (req, res) => {
+  if (req.params.origin == "tiki") {
     fetchTikiProductData(req.params.itemId).then((tikiProductHistory) =>
       res.status(305).send(tikiProductHistory)
     );
