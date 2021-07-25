@@ -128,6 +128,8 @@ class Content extends Component {
   }
 
   basicOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
     legend: {
       labels: {
         fontColor: "rgba(255, 255, 255, 0.6)",
