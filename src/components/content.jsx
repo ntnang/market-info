@@ -65,9 +65,8 @@ class Content extends Component {
     const datasets = [];
     const sellerHistoryMap = new Map(Object.entries(productHistory.sellers));
     for (let sellerHistory of sellerHistoryMap.values()) {
-      const lastSevenDaysDataSet = this.buildLastSevenDaysDataSet(
-        sellerHistory
-      );
+      const lastSevenDaysDataSet =
+        this.buildLastSevenDaysDataSet(sellerHistory);
       if (
         lastSevenDaysDataSet.data &&
         lastSevenDaysDataSet.data.some((data) => data !== null)
@@ -81,7 +80,8 @@ class Content extends Component {
   buildLastSevenDaysDataSet(sellerHistory) {
     const dataset = {};
     const lastSevenDaysHistories = sellerHistory.priceHistories.filter(
-      (history) => Date.parse(history.trackedDate) > this.getDateThreshold(7)
+      (history) =>
+        Date.parse(history.trackedDate) > this.getDateOfSevenDaysAgo()
     );
     dataset.data = this.generateChartData(
       sellerHistory.priceHistories,
@@ -92,10 +92,8 @@ class Content extends Component {
     return dataset;
   }
 
-  getDateThreshold(numberOfDays) {
-    let dateThreshold = new Date();
-    dateThreshold.setDate(dateThreshold.getDate() - numberOfDays);
-    return dateThreshold;
+  getDateOfSevenDaysAgo() {
+    return this.lastSevenDates[0];
   }
 
   generateChartData(wholeHistories, inChartRangeHistories, chartDates) {
@@ -132,21 +130,21 @@ class Content extends Component {
   basicOptions = {
     legend: {
       labels: {
-        fontColor: "#495057",
+        fontColor: "rgba(255, 255, 255, 0.6)",
       },
     },
     scales: {
       xAxes: [
         {
           ticks: {
-            fontColor: "#495057",
+            fontColor: "rgba(255, 255, 255, 0.6)",
           },
         },
       ],
       yAxes: [
         {
           ticks: {
-            fontColor: "#495057",
+            fontColor: "rgba(255, 255, 255, 0.6)",
           },
         },
       ],
