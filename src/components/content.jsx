@@ -89,6 +89,7 @@ class Content extends Component {
       this.lastSevenDates
     );
     dataset.label = sellerHistory.name;
+    dataset.borderColor = "#e14eca";
     return dataset;
   }
 
@@ -141,6 +142,9 @@ class Content extends Component {
           ticks: {
             fontColor: "rgba(255, 255, 255, 0.6)",
           },
+          gridLines: {
+            color: "#e14eca"
+          }
         },
       ],
       yAxes: [
@@ -148,6 +152,9 @@ class Content extends Component {
           ticks: {
             fontColor: "rgba(255, 255, 255, 0.6)",
           },
+          gridLines: {
+            display: false,
+          }
         },
       ],
     },
@@ -163,6 +170,7 @@ class Content extends Component {
                 type="line"
                 data={this.state.productHistory}
                 options={this.basicOptions}
+                height="300"
               />
             </Card>
             {/* <div className="card card-chart">
