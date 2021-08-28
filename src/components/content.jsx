@@ -128,51 +128,56 @@ class Content extends Component {
     return outChartRangeHistories[outChartRangeHistories.length - 1];
   }
 
-  basicOptions = {
+  gradientChartOptionsConfigurationWithTooltipPurple = {
     maintainAspectRatio: false,
-      legend: {
-        display: false
-      },
-    responsive: true,
+    legend: {
+      display: false,
+    },
+
     tooltips: {
-      backgroundColor: '#f5f5f5',
-      titleFontColor: '#333',
-      bodyFontColor: '#666',
+      backgroundColor: "#f5f5f5",
+      titleFontColor: "#333",
+      bodyFontColor: "#666",
       bodySpacing: 4,
       xPadding: 12,
       mode: "nearest",
       intersect: 0,
-      position: "nearest"
+      position: "nearest",
     },
+    responsive: true,
     scales: {
-      yAxes: [{
-        barPercentage: 1.6,
-        gridLines: {
-          drawBorder: false,
-          color: 'rgba(29,140,248,0.0)',
-          zeroLineColor: "transparent",
+      yAxes: [
+        {
+          barPercentage: 1.6,
+          gridLines: {
+            drawBorder: false,
+            color: "rgba(29,140,248,0.0)",
+            zeroLineColor: "transparent",
+          },
+          ticks: {
+            suggestedMin: 60,
+            suggestedMax: 125,
+            padding: 20,
+            fontColor: "#9a9a9a",
+          },
         },
-        ticks: {
-          suggestedMin: 50,
-          suggestedMax: 110,
-          padding: 20,
-          fontColor: "#ff8a76"
-        }
-      }],
-  
-      xAxes: [{
-        barPercentage: 1.6,
-        gridLines: {
-          drawBorder: false,
-          color: 'rgba(220,53,69,0.1)',
-          zeroLineColor: "transparent",
+      ],
+
+      xAxes: [
+        {
+          barPercentage: 1.6,
+          gridLines: {
+            drawBorder: false,
+            color: "rgba(225,78,202,0.1)",
+            zeroLineColor: "transparent",
+          },
+          ticks: {
+            padding: 20,
+            fontColor: "#9a9a9a",
+          },
         },
-        ticks: {
-          padding: 20,
-          fontColor: "#ff8a76"
-        }
-      }]
-    }
+      ],
+    },
   };
 
   render() {
@@ -184,72 +189,10 @@ class Content extends Component {
               <Chart
                 type="line"
                 data={this.state.productHistory}
-                options={this.basicOptions}
+                options={this.gradientChartOptionsConfigurationWithTooltipPurple}
                 height="300"
               />
             </Card>
-            {/* <div className="card card-chart">
-              <div className="card-header ">
-                <div className="row">
-                  <div className="col-sm-6 text-left">
-                    <h5 className="card-category">Total Shipments</h5>
-                    <h2 className="card-title">Performance</h2>
-                  </div>
-                  <div className="col-sm-6">
-                    <div
-                      className="btn-group btn-group-toggle float-right"
-                      data-toggle="buttons"
-                    >
-                      <label
-                        className="btn btn-sm btn-primary btn-simple active"
-                        id="0"
-                      >
-                        <input type="radio" name="options" />
-                        <span className="d-none d-sm-block d-md-block d-lg-block d-xl-block">
-                          Accounts
-                        </span>
-                        <span className="d-block d-sm-none">
-                          <i className="tim-icons icon-single-02"></i>
-                        </span>
-                      </label>
-                      <label
-                        className="btn btn-sm btn-primary btn-simple"
-                        id="1"
-                      >
-                        <input
-                          type="radio"
-                          className="d-none d-sm-none"
-                          name="options"
-                        />
-                        <span className="d-none d-sm-block d-md-block d-lg-block d-xl-block">
-                          Purchases
-                        </span>
-                        <span className="d-block d-sm-none">
-                          <i className="tim-icons icon-gift-2"></i>
-                        </span>
-                      </label>
-                      <label
-                        className="btn btn-sm btn-primary btn-simple"
-                        id="2"
-                      >
-                        <input type="radio" className="d-none" name="options" />
-                        <span className="d-none d-sm-block d-md-block d-lg-block d-xl-block">
-                          Sessions
-                        </span>
-                        <span className="d-block d-sm-none">
-                          <i className="tim-icons icon-tap-02"></i>
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="card-body">
-                <div className="chart-area">
-                  <canvas id="chartBig1"></canvas>
-                </div>
-              </div>
-            </div> */}
           </div>
         </div>
         <div className="row">
