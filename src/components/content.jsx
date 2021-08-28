@@ -4,8 +4,12 @@ import { Chart } from "primereact/chart";
 
 class Content extends Component {
   state = {
-    productHistory: {
-      datasets: [],
+    product: {
+      name: "",
+      history: {
+        labels: [],
+        datasets: [],
+      },
     },
   };
 
@@ -17,15 +21,7 @@ class Content extends Component {
     })
     .reverse();
 
-  weekDayNames = [
-    "SUN",
-    "MON",
-    "TUE",
-    "WED",
-    "THU",
-    "FRI",
-    "SAT",
-  ];
+  weekDayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   monthNames = [
     "JAN",
     "FEB",
@@ -53,9 +49,12 @@ class Content extends Component {
       .then((res) => res.json())
       .then((history) => {
         this.setState({
-          productHistory: {
-            labels: lastSevenWeekDayNames,
-            datasets: this.buildChartDataSet(history),
+          product: {
+            name: history.name,
+            history: {
+              labels: lastSevenWeekDayNames,
+              datasets: this.buildChartDataSet(history),
+            },
           },
         });
       });
@@ -181,15 +180,26 @@ class Content extends Component {
   };
 
   render() {
+    const latestProductLastSevenDaysHistoryCardHeader = (
+      <div className="card-header">
+        <h5 className="card-category">Last 7 Days</h5>
+        <h3 className="card-title">{this.state.product.name}</h3>
+      </div>
+    );
     return (
       <div className="content">
         <div className="row">
           <div className="col-12">
-            <Card className="card card-chart">
+            <Card
+              className="card card-chart"
+              header={latestProductLastSevenDaysHistoryCardHeader}
+            >
               <Chart
                 type="line"
-                data={this.state.productHistory}
-                options={this.gradientChartOptionsConfigurationWithTooltipPurple}
+                data={this.state.product.history}
+                options={
+                  this.gradientChartOptionsConfigurationWithTooltipPurple
+                }
                 height="300"
               />
             </Card>
