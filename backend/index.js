@@ -211,12 +211,12 @@ getAllTikiSellers = (item) => {
 };
 
 fetchShopeeProductData = (itemId, shopId) => {
-  const url = `https://shopee.vn/api/v2/item/get?itemid=${itemId}&shopid=${shopId}`;
+  const url = `https://shopee.vn/api/v4/item/get?itemid=${itemId}&shopid=${shopId}`;
   return fetch(url)
     .then((res) => res.json())
     .then(async (shopee) => {
       const productHistory = await convertShopeeItemToProductHistoryModel(
-        shopee.item
+        shopee.data
       );
       productHistory.sellers = Array.from(productHistory.sellers);
       return productHistory;
