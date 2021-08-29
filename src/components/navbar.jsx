@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import ProductInfo from "./price-tracking/product-info";
+import ProductInfo from "./content/product-info";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 
