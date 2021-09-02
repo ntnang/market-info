@@ -18561,18 +18561,6 @@ table.tablesorter thead tr .headerSortDown {
   color: white;
 }
 
-.sidebar .nav li.active > a:not([data-toggle="collapse"]):before,
-.off-canvas-sidebar .nav li.active > a:not([data-toggle="collapse"]):before {
-  content: " ";
-  position: absolute;
-  height: 6px;
-  width: 6px;
-  top: 22px;
-  left: -4px;
-  background: #ffffff;
-  border-radius: 50%;
-}
-
 .sidebar .nav li.active > a[data-toggle="collapse"],
 .off-canvas-sidebar .nav li.active > a[data-toggle="collapse"] {
   background: transparent;

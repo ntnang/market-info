@@ -1,0 +1,24 @@
+%active-sidebar-menu-item {
+  content: " ";
+  position: absolute;
+  height: 6px;
+  width: 6px;
+  top: 22px;
+  left: -4px;
+  background: #ffffff;
+  border-radius: 50%;
+}
+.sidebar {
+  .nav {
+    li > a.active:not([data-toggle="collapse"]):before {
+      @extend %active-sidebar-menu-item;
+    }
+    .off-canvas-sidebar {
+      .nav {
+        li > a.active:not([data-toggle="collapse"]):before {
+          @extend %active-sidebar-menu-item;
+        }
+      }
+    }
+  }
+}
