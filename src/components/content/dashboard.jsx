@@ -22,6 +22,20 @@ class Dashboard extends Component {
     .reverse();
 
   weekDayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  monthNames = [
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC",
+  ];
 
   componentDidMount() {
     this.findLastTrackedProductHistories();
@@ -47,6 +61,7 @@ class Dashboard extends Component {
   }
 
   buildChartDataSet(productHistory) {
+    console.log(productHistory);
     const datasets = [];
     const sellerHistoryMap = new Map(Object.entries(productHistory.sellers));
     for (let sellerHistory of sellerHistoryMap.values()) {
@@ -132,6 +147,7 @@ class Dashboard extends Component {
             zeroLineColor: "transparent",
           },
           ticks: {
+            padding: 20,
             fontColor: "#9a9a9a",
           },
         },
@@ -145,6 +161,7 @@ class Dashboard extends Component {
             zeroLineColor: "rgba(225,78,202,0.1)",
           },
           ticks: {
+            padding: 20,
             fontColor: "#9a9a9a",
           },
         },
