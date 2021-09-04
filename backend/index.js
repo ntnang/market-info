@@ -40,11 +40,27 @@ app.get("/api/last-product/history/", (req, res) => {
       if (lastTrackedProduct) {
         ProductHistory.findOne({ id: lastTrackedProduct.id }).exec(
           (err, productHistory) => {
-            res.status(200).send(productHistory);
+            if (err) {
+              console.error(err);
+              res.status(500).send(err);
+            } else {
+              res.status(200).send(productHistory);
+            }
           }
         );
       }
     });
+});
+
+app.get("/api/products", (req, res) => {
+  ProductHistory.find({}, (err, productHistories) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send(err);
+    } else {
+      res.status(200).send(productHistories);
+    }
+  });
 });
 
 app.post("/api/product/:id", async (req, res) => {
@@ -53,12 +69,26 @@ app.post("/api/product/:id", async (req, res) => {
   const newProductHistory = refineProductHistoryData(req.body);
   if (itemExisted) {
     ProductHistory.findOne(query).exec((err, persistedProductHistory) => {
-      updatePriceHistoriesIfChanged(newProductHistory, persistedProductHistory);
-      res.status(200);
+      if (err) {
+        console.error(err);
+        res.status(500).send(err);
+      } else {
+        updatePriceHistoriesIfChanged(
+          newProductHistory,
+          persistedProductHistory
+        );
+        res.status(200);
+      }
     });
   } else {
-    saveProductHistory(newProductHistory);
-    res.status(201);
+    const productHistory = new ProductHistory(productHistoryData);
+    productHistory.save((err) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send(err);
+      }
+      res.status(201);
+    });
   }
 });
 
@@ -150,13 +180,6 @@ updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
     persistedProduct.save();
   }
   return persistedProduct;
-};
-
-saveProductHistory = (productHistoryData) => {
-  const productHistory = new ProductHistory(productHistoryData);
-  productHistory.save((err) => {
-    if (err) console.error(err);
-  });
 };
 
 refineProductHistoryData = (rawProductHistoryData) => {
@@ -274,6 +297,7 @@ setInterval(() => {
     productHistories.forEach((productHistory) => {
       checkChangedPriceProduct(productHistory);
     });
+    if (err) console.error(err);
   });
 }, TRACKING_INTERVAL);
 
