@@ -125,14 +125,13 @@ updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
   openSellerIds.forEach((sellerId) => {
     const newSeller = newSellers.get(sellerId);
     persistedProductSellers.set(sellerId, {
-      storeId: newSeller.store_id,
       name: newSeller.name,
-      slug: newSeller.slug,
-      sku: newSeller.sku,
-      logo: newSeller.logo,
-      productId: newSeller.product_id,
+      logoUrl: newSeller.logo,
       priceHistories: [
-        { price: newSeller.price, trackedDate: currentDateTime },
+        {
+          price: newSeller.priceHistories[0].price,
+          trackedDate: currentDateTime,
+        },
       ],
     });
   });

@@ -22,20 +22,6 @@ class Dashboard extends Component {
     .reverse();
 
   weekDayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  monthNames = [
-    "JAN",
-    "FEB",
-    "MAR",
-    "APR",
-    "MAY",
-    "JUN",
-    "JUL",
-    "AUG",
-    "SEP",
-    "OCT",
-    "NOV",
-    "DEC",
-  ];
 
   componentDidMount() {
     this.findLastTrackedProductHistories();
