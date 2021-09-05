@@ -181,55 +181,6 @@ class Dashboard extends Component {
             </Card>
           </div>
         </div>
-        <div className="row">
-          <div className="col-lg-4">
-            <div className="card card-chart">
-              <div className="card-header">
-                <h5 className="card-category">Total Shipments</h5>
-                <h3 className="card-title">
-                  <i className="tim-icons icon-bell-55 text-primary"></i>{" "}
-                  763,215
-                </h3>
-              </div>
-              <div className="card-body">
-                <div className="chart-area">
-                  <canvas id="chartLinePurple"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="col-lg-4">
-            <div className="card card-chart">
-              <div className="card-header">
-                <h5 className="card-category">Daily Sales</h5>
-                <h3 className="card-title">
-                  <i className="tim-icons icon-delivery-fast text-info"></i>{" "}
-                  3,500€
-                </h3>
-              </div>
-              <div className="card-body">
-                <div className="chart-area">
-                  <canvas id="CountryChart"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="col-lg-4">
-            <div className="card card-chart">
-              <div className="card-header">
-                <h5 className="card-category">Completed Tasks</h5>
-                <h3 className="card-title">
-                  <i className="tim-icons icon-send text-success"></i> 12,100K
-                </h3>
-              </div>
-              <div className="card-body">
-                <div className="chart-area">
-                  <canvas id="chartLineGreen"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </React.Fragment>
     );
   }
