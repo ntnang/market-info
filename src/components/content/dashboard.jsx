@@ -47,7 +47,6 @@ class Dashboard extends Component {
   }
 
   buildChartDataSet(productHistory) {
-    console.log(productHistory);
     const datasets = [];
     const sellerHistoryMap = new Map(Object.entries(productHistory.sellers));
     for (let sellerHistory of sellerHistoryMap.values()) {
