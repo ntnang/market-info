@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import { Button } from "primereact/button";
 import { Carousel } from "primereact/carousel";
 import { Dialog } from "primereact/dialog";
+import { ProductService } from "../../service/ProductService";
+import { UrlExtractor } from "../../service/UrlExtractor";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -17,7 +19,10 @@ class ProductInfo extends Component {
     },
   };
 
-  renderFooter() {
+  productService = new ProductService();
+  urlExtractor = new UrlExtractor();
+
+  getFooter() {
     return (
       <div>
         <Button
@@ -45,7 +50,7 @@ class ProductInfo extends Component {
     return (
       <Dialog
         header="Product information"
-        footer={this.renderFooter()}
+        footer={this.getFooter()}
         visible={this.props.isDialogVisible}
         style={{ width: "50vw" }}
         onHide={this.props.onHide}
@@ -62,40 +67,34 @@ class ProductInfo extends Component {
   }
 
   getProductInformation = () => {
-    switch (this.extractHostname(this.props.link)) {
-      case "tiki.vn":
-        this.getTikiProductInformation();
+    const hostname = this.urlExtractor.extractHostname(this.props.link);
+    switch (hostname) {
+      case this.urlExtractor.TIKI_VN:
+        const productId = this.urlExtractor.extractTikiProductId(
+          this.props.link
+        );
+        this.productService
+          .getProductInformation(hostname, productId)
+          .then((product) => {
+            this.setState({
+              product,
+            });
+          });
         break;
-      case "shopee.vn":
-        this.getShopeeProductInformation();
+      case this.urlExtractor.SHOPEE_VN:
+        const ids = this.urlExtractor.extractShopeeProductIds();
+        this.productService
+          .getProductInformation(hostname, ids.itemId, ids.shopId)
+          .then((product) => {
+            this.setState({
+              product,
+            });
+          });
+        break;
+      default:
+        alert("Not supported!");
         break;
     }
-  };
-
-  getTikiProductInformation = () => {
-    const productId = this.extractTikiProductId();
-    fetch(`http://localhost:3001/api/tiki/product/history/${productId}`)
-      .then((res) => res.json())
-      .then((product) => {
-        if (Array.isArray(product.sellers)) {
-          product.sellers = new Map(product.sellers);
-        }
-        this.setState({ product });
-      });
-  };
-
-  getShopeeProductInformation = () => {
-    // use the proxy https://cors-anywhere.herokuapp.com/ to bypass cors from client side
-    const ids = this.extractShopeeProductIds();
-    const endPoint = `http://localhost:3001/api/shopee/product/history/${ids.itemId}/${ids.shopId}`;
-    fetch(endPoint)
-      .then((res) => res.json())
-      .then((product) => {
-        if (Array.isArray(product.sellers)) {
-          product.sellers = new Map(product.sellers);
-        }
-        this.setState({ product });
-      });
   };
 
   trackProductInformation = () => {
@@ -110,39 +109,6 @@ class ProductInfo extends Component {
     });
     this.props.onHide();
   };
-
-  extractTikiProductId() {
-    const start = this.props.link.lastIndexOf("-p") + 2;
-    const end = this.props.link.search(".html");
-    const productId = this.props.link.substring(start, end);
-    return productId;
-  }
-
-  extractShopeeProductIds() {
-    const start = this.props.link.lastIndexOf("-i") + 2;
-    const end = this.props.link.length;
-    const idStr = this.props.link.substring(start, end);
-    const ids = idStr.split(".");
-    return { itemId: ids[2], shopId: ids[1] };
-  }
-
-  extractHostname(url) {
-    var hostname;
-    //find & remove protocol (http, ftp, etc.) and get hostname
-
-    if (url.indexOf("//") > -1) {
-      hostname = url.split("/")[2];
-    } else {
-      hostname = url.split("/")[0];
-    }
-
-    //find & remove port number
-    hostname = hostname.split(":")[0];
-    //find & remove "?"
-    hostname = hostname.split("?")[0];
-
-    return hostname;
-  }
 
   replacer(key, value) {
     if (value instanceof Map) {

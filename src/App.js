@@ -6,7 +6,6 @@ import Setting from "./components/setting";
 import "./App.css";
 import "./scss/button.scss";
 import "./scss/card.scss";
-import './scss/sidebar.scss'
 
 class App extends Component {
   render() {
