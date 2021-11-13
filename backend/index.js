@@ -22,11 +22,11 @@ dbConnection.once("open", () => {
 });
 
 app.get("/api/:origin/product/history/:itemId/:shopId?", (req, res) => {
-  if (req.params.origin == "tiki") {
+  if (req.params.origin == "tiki.vn") {
     fetchTikiProductData(req.params.itemId).then((tikiProductHistory) =>
       res.status(305).send(tikiProductHistory)
     );
-  } else if (req.params.origin == "shopee") {
+  } else if (req.params.origin == "shopee.vn") {
     fetchShopeeProductData(req.params.itemId, req.params.shopId).then(
       (shopeeProductHistory) => res.status(305).send(shopeeProductHistory)
     );
@@ -78,7 +78,7 @@ app.post("/api/product/:id", async (req, res) => {
       }
     });
   } else {
-    const productHistory = new ProductHistory(productHistoryData);
+    const productHistory = new ProductHistory(newProductHistory);
     productHistory.save((err) => {
       if (err) {
         console.error(err);
