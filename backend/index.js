@@ -30,6 +30,8 @@ app.get("/api/:origin/product/:itemId/:shopId?", (req, res) => {
     fetchShopeeProductData(req.params.itemId, req.params.shopId).then(
       (shopeeProduct) => res.status(305).send(shopeeProduct)
     );
+  } else {
+    res.status(404).send("Not supported origin");
   }
 });
 
