@@ -21,14 +21,14 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-app.get("/api/:origin/product/history/:itemId/:shopId?", (req, res) => {
+app.get("/api/:origin/product/:itemId/:shopId?", (req, res) => {
   if (req.params.origin == "tiki.vn") {
-    fetchTikiProductData(req.params.itemId).then((tikiProductHistory) =>
-      res.status(305).send(tikiProductHistory)
+    fetchTikiProductData(req.params.itemId).then((tikiProduct) =>
+      res.status(305).send(tikiProduct)
     );
   } else if (req.params.origin == "shopee.vn") {
     fetchShopeeProductData(req.params.itemId, req.params.shopId).then(
-      (shopeeProductHistory) => res.status(305).send(shopeeProductHistory)
+      (shopeeProduct) => res.status(305).send(shopeeProduct)
     );
   }
 });
