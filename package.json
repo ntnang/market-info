@@ -13,7 +13,7 @@
     "mongoose": "^5.13.2",
     "node-fetch": "^2.6.1",
     "node-sass": "^4.14.1",
-    "nodemon": "^2.0.12",
+    "nodemon": "^2.0.15",
     "primeicons": "^4.1.0",
     "primereact": "^5.0.2",
     "react": "^16.13.1",
