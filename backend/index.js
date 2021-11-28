@@ -76,7 +76,7 @@ app.post("/api/product/:id", async (req, res) => {
           newProductHistory,
           persistedProductHistory
         );
-        res.status(200);
+        res.status(200).send();
       }
     });
   } else {
@@ -86,7 +86,7 @@ app.post("/api/product/:id", async (req, res) => {
         console.error(err);
         res.status(500).send(err);
       }
-      res.status(201);
+      res.status(201).send();
     });
   }
 });
