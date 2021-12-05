@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 const cors = require("cors");
 const ProductHistory = require("./model/product-history");
 const PORT = 3001;
-const TRACKING_INTERVAL = 86400000; // One day
+const TRACKING_INTERVAL = 3600000; // One hour
 const SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
 
 app.use(cors());
@@ -21,12 +21,15 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
+const TIKI_VN = "tiki.vn";
+const SHOPEE_VN = "shopee.vn";
+
 app.get("/api/:origin/product/:itemId/:shopId?", (req, res) => {
-  if (req.params.origin == "tiki.vn") {
+  if (req.params.origin == TIKI_VN) {
     fetchTikiProductData(req.params.itemId).then((tikiProduct) =>
       res.status(305).send(tikiProduct)
     );
-  } else if (req.params.origin == "shopee.vn") {
+  } else if (req.params.origin == SHOPEE_VN) {
     fetchShopeeProductData(req.params.itemId, req.params.shopId).then(
       (shopeeProduct) => res.status(305).send(shopeeProduct)
     );
@@ -197,8 +200,9 @@ convertTikiItemToProductHistoryModel = (tikiItem) => {
   return {
     id: tikiItem.id,
     name: tikiItem.name,
+    thumbnailUrl: tikiItem.thumbnail_url,
     imagesUrls: getAllTikiImageUrls(tikiItem),
-    origin: "tiki",
+    origin: TIKI_VN,
     sellers: getAllTikiSellers(tikiItem),
     lastTrackedDate: null,
   };
@@ -246,11 +250,13 @@ fetchShopeeProductData = (itemId, shopId) => {
 
 convertShopeeItemToProductHistoryModel = async (shopeeItem) => {
   const shopeeSeller = await fetchShopeeSeller(shopeeItem.shopid);
+  const imageUrls = getAllShopeeImageUrls(shopeeItem);
   return {
     id: shopeeItem.itemid,
     name: shopeeItem.name,
-    imagesUrls: getAllShopeeImageUrls(shopeeItem),
-    origin: "shopee",
+    thumbnailUrl: `${imageUrls[0]}_tn`,
+    imagesUrls: imageUrls,
+    origin: SHOPEE_VN,
     sellers: getShopeeSellerMap(shopeeSeller, shopeeItem.price_max),
     lastTrackedDate: null,
   };
