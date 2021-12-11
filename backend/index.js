@@ -3,7 +3,7 @@ const app = express();
 const mongoose = require("mongoose");
 const fetch = require("node-fetch");
 const cors = require("cors");
-const ProductHistory = require("./model/product-history");
+const ProductHistory = require("./model/ProductHistory");
 const PORT = 3001;
 const TRACKING_INTERVAL = 3600000; // One hour
 const SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
@@ -38,7 +38,7 @@ app.get("/api/:origin/product/:itemId/:shopId?", (req, res) => {
   }
 });
 
-app.get("/api/last-product/history/", (req, res) => {
+app.get("/api/last-product/history/", (_, res) => {
   ProductHistory.findOne()
     .sort({ lastTrackedDate: -1 })
     .exec((err, lastTrackedProduct) => {
@@ -47,20 +47,34 @@ app.get("/api/last-product/history/", (req, res) => {
         res.status(500).send(err);
       }
       if (lastTrackedProduct) {
-        res.status(200).send(lastTrackedProduct);
+        res
+          .status(200)
+          .send(
+            convertPersistedProductHistoryModelToProductHistoryResponse(
+              lastTrackedProduct
+            )
+          );
       } else {
         res.status(404).send();
       }
     });
 });
 
-app.get("/api/products", (req, res) => {
+app.get("/api/products", (_, res) => {
   ProductHistory.find({}, (err, productHistories) => {
     if (err) {
       console.error(err);
       res.status(500).send(err);
     } else {
-      res.status(200).send(productHistories);
+      res
+        .status(200)
+        .send(
+          Array.from(productHistories, (productHistory) =>
+            convertPersistedProductHistoryModelToProductHistoryResponse(
+              productHistory
+            )
+          )
+        );
     }
   });
 });
@@ -294,6 +308,46 @@ getShopeeSellerMap = (shopeeSeller, price) => {
   };
   sellers.set(shopeeSeller.id.toString(), currentSeller);
   return sellers;
+};
+
+convertPersistedProductHistoryModelToProductHistoryResponse = (
+  persistedProductHistoryObject
+) => {
+  return {
+    id: persistedProductHistoryObject.id,
+    name: persistedProductHistoryObject.name,
+    thumbnailUrl: persistedProductHistoryObject.thumbnailUrl,
+    imagesUrls: persistedProductHistoryObject.imagesUrls,
+    origin: persistedProductHistoryObject.origin,
+    sellers: Array.from(persistedProductHistoryObject.sellers, (seller) =>
+      convertPersistedSellerToSellerResponse(seller)
+    ),
+    lastTrackedDate: persistedProductHistoryObject.lastTrackedDate,
+  };
+};
+
+convertPersistedSellerToSellerResponse = (persistedSeller) => {
+  return [
+    persistedSeller[0],
+    {
+      name: persistedSeller[1].name,
+      logoUrl: persistedSeller[1].logoUrl,
+      priceHistories: Array.from(
+        persistedSeller[1].priceHistories,
+        (priceHistory) =>
+          convertPersistedPriceHistoryToPriceHistoryResponse(priceHistory)
+      ),
+    },
+  ];
+};
+
+convertPersistedPriceHistoryToPriceHistoryResponse = (
+  persistedPriceHistory
+) => {
+  return {
+    price: persistedPriceHistory.price,
+    trackedDate: persistedPriceHistory.trackedDate,
+  };
 };
 
 setInterval(() => {
