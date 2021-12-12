@@ -319,21 +319,26 @@ convertPersistedProductHistoryModelToProductHistoryResponse = (
     thumbnailUrl: persistedProductHistoryObject.thumbnailUrl,
     imagesUrls: persistedProductHistoryObject.imagesUrls,
     origin: persistedProductHistoryObject.origin,
-    sellers: Array.from(persistedProductHistoryObject.sellers, (seller) =>
-      convertPersistedSellerToSellerResponse(seller)
+    sellers: Array.from(
+      persistedProductHistoryObject.sellers,
+      ([sellerId, seller]) =>
+        convertPersistedSellerToSellerResponse(sellerId, seller)
     ),
     lastTrackedDate: persistedProductHistoryObject.lastTrackedDate,
   };
 };
 
-convertPersistedSellerToSellerResponse = (persistedSeller) => {
+convertPersistedSellerToSellerResponse = (
+  persistedSellerId,
+  persistedSeller
+) => {
   return [
-    persistedSeller[0],
+    persistedSellerId,
     {
-      name: persistedSeller[1].name,
-      logoUrl: persistedSeller[1].logoUrl,
+      name: persistedSeller.name,
+      logoUrl: persistedSeller.logoUrl,
       priceHistories: Array.from(
-        persistedSeller[1].priceHistories,
+        persistedSeller.priceHistories,
         (priceHistory) =>
           convertPersistedPriceHistoryToPriceHistoryResponse(priceHistory)
       ),
