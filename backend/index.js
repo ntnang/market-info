@@ -89,11 +89,11 @@ app.post("/api/product/:id", async (req, res) => {
         console.error(err);
         res.status(500).send(err);
       } else {
-        updatePriceHistoriesIfChanged(
+        const isChanged = updatePriceHistoriesIfChanged(
           newProductHistory,
           persistedProductHistory
         );
-        res.status(200).send();
+        res.status(isChanged ? 201 : 200).send();
       }
     });
   } else {
@@ -195,7 +195,7 @@ updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
     persistedProduct.lastTrackedDate = currentDateTime;
     persistedProduct.save();
   }
-  return persistedProduct;
+  return anySellerPriceChanged;
 };
 
 refineProductHistoryData = (rawProductHistoryData) => {
