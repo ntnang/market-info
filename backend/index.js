@@ -24,7 +24,7 @@ dbConnection.once("open", () => {
 const TIKI_VN = "tiki.vn";
 const SHOPEE_VN = "shopee.vn";
 
-app.get("/api/:origin/product/:itemId/:shopId?", (req, res) => {
+app.get("/api/:origin/product/current-info/:itemId/:shopId?", (req, res) => {
   if (req.params.origin == TIKI_VN) {
     fetchTikiProductData(req.params.itemId).then((tikiProduct) =>
       res.status(305).send(tikiProduct)
@@ -38,7 +38,28 @@ app.get("/api/:origin/product/:itemId/:shopId?", (req, res) => {
   }
 });
 
-app.get("/api/last-product/history/", (_, res) => {
+app.get("/api/:origin/product/history/:itemId", (req, res) => {
+  const query = { id: req.params.itemId, origin: req.params.origin };
+  ProductHistory.findOne(query, (err, productHistory) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send(err);
+    }
+    if (productHistory) {
+      res
+        .status(200)
+        .send(
+          convertPersistedProductHistoryModelToProductHistoryResponse(
+            productHistory
+          )
+        );
+    } else {
+      res.status(404).send();
+    }
+  });
+});
+
+app.get("/api/product/latest/history/", (_, res) => {
   ProductHistory.findOne()
     .sort({ lastTrackedDate: -1 })
     .exec((err, lastTrackedProduct) => {
