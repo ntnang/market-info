@@ -3,7 +3,7 @@ const app = express();
 const mongoose = require("mongoose");
 const fetch = require("node-fetch");
 const cors = require("cors");
-const ProductHistory = require("./model/ProductHistory");
+const Product = require("./model/Product");
 const PORT = 3001;
 const TRACKING_INTERVAL = 3600000; // One hour
 const SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
@@ -40,19 +40,15 @@ app.get("/api/:origin/product/current-info/:itemId/:shopId?", (req, res) => {
 
 app.get("/api/:origin/product/history/:itemId", (req, res) => {
   const query = { id: req.params.itemId, origin: req.params.origin };
-  ProductHistory.findOne(query, (err, productHistory) => {
+  Product.findOne(query, (err, product) => {
     if (err) {
       console.error(err);
       res.status(500).send(err);
     }
-    if (productHistory) {
+    if (product) {
       res
         .status(200)
-        .send(
-          convertPersistedProductHistoryModelToProductHistoryResponse(
-            productHistory
-          )
-        );
+        .send(convertPersistedProductModelToProductResponse(product));
     } else {
       res.status(404).send();
     }
@@ -60,7 +56,7 @@ app.get("/api/:origin/product/history/:itemId", (req, res) => {
 });
 
 app.get("/api/product/latest/history/", (_, res) => {
-  ProductHistory.findOne()
+  Product.findOne()
     .sort({ lastTrackedDate: -1 })
     .exec((err, lastTrackedProduct) => {
       if (err) {
@@ -71,9 +67,7 @@ app.get("/api/product/latest/history/", (_, res) => {
         res
           .status(200)
           .send(
-            convertPersistedProductHistoryModelToProductHistoryResponse(
-              lastTrackedProduct
-            )
+            convertPersistedProductModelToProductResponse(lastTrackedProduct)
           );
       } else {
         res.status(404).send();
@@ -82,7 +76,7 @@ app.get("/api/product/latest/history/", (_, res) => {
 });
 
 app.get("/api/products", (_, res) => {
-  ProductHistory.find({}, (err, productHistories) => {
+  Product.find({}, (err, products) => {
     if (err) {
       console.error(err);
       res.status(500).send(err);
@@ -90,10 +84,8 @@ app.get("/api/products", (_, res) => {
       res
         .status(200)
         .send(
-          Array.from(productHistories, (productHistory) =>
-            convertPersistedProductHistoryModelToProductHistoryResponse(
-              productHistory
-            )
+          Array.from(products, (product) =>
+            convertPersistedProductModelToProductResponse(product)
           )
         );
     }
@@ -102,24 +94,24 @@ app.get("/api/products", (_, res) => {
 
 app.post("/api/product/:id", async (req, res) => {
   const query = { id: req.params.id };
-  const itemExisted = await ProductHistory.exists(query);
-  const newProductHistory = refineProductHistoryData(req.body);
+  const itemExisted = await Product.exists(query);
+  const newProduct = setTrackedDate(req.body);
   if (itemExisted) {
-    ProductHistory.findOne(query).exec((err, persistedProductHistory) => {
+    Product.findOne(query).exec((err, persistedProduct) => {
       if (err) {
         console.error(err);
         res.status(500).send(err);
       } else {
         const isChanged = updatePriceHistoriesIfChanged(
-          newProductHistory,
-          persistedProductHistory
+          newProduct,
+          persistedProduct
         );
         res.status(isChanged ? 201 : 200).send();
       }
     });
   } else {
-    const productHistory = new ProductHistory(newProductHistory);
-    productHistory.save((err) => {
+    const product = new Product(newProduct);
+    product.save((err) => {
       if (err) {
         console.error(err);
         res.status(500).send(err);
@@ -138,9 +130,9 @@ fetchTikiProductData = (id) => {
   })
     .then((res) => res.json())
     .then((item) => {
-      const productHistory = convertTikiItemToProductHistoryModel(item);
-      productHistory.sellers = Array.from(productHistory.sellers);
-      return productHistory;
+      const product = convertTikiItemToProductModel(item);
+      product.sellers = Array.from(product.sellers);
+      return product;
     });
 };
 
@@ -154,16 +146,16 @@ checkChangedPriceProduct = (persistedProduct) => {
     .then((res) => res.json())
     .then((item) => {
       return updatePriceHistoriesIfChanged(
-        convertTikiItemToProductHistoryModel(item),
+        convertTikiItemToProductModel(item),
         persistedProduct
       );
     });
 };
 
-updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
+updatePriceHistoriesIfChanged = (newProduct, persistedProduct) => {
   let anySellerPriceChanged = false;
   const currentDateTime = new Date();
-  const newSellers = newProductHistory.sellers;
+  const newSellers = newProduct.sellers;
   const newSellerIds = Array.from(newSellers.keys());
   const persistedProductSellers = persistedProduct.sellers;
   const persistedProductSellerIds = [...persistedProductSellers.keys()];
@@ -219,19 +211,19 @@ updatePriceHistoriesIfChanged = (newProductHistory, persistedProduct) => {
   return anySellerPriceChanged;
 };
 
-refineProductHistoryData = (rawProductHistoryData) => {
-  const refinedProductHistoryData = Object.assign({}, rawProductHistoryData);
+setTrackedDate = (originalProduct) => {
+  const trackedProduct = Object.assign({}, originalProduct);
   const currentDateTime = new Date();
-  refinedProductHistoryData.lastTrackedDate = currentDateTime;
-  const sellersValue = new Map(rawProductHistoryData.sellers.value);
+  trackedProduct.lastTrackedDate = currentDateTime;
+  const sellersValue = new Map(originalProduct.sellers.value);
   for (let seller of sellersValue.values()) {
     seller.priceHistories[0].trackedDate = currentDateTime;
   }
-  refinedProductHistoryData.sellers = sellersValue;
-  return refinedProductHistoryData;
+  trackedProduct.sellers = sellersValue;
+  return trackedProduct;
 };
 
-convertTikiItemToProductHistoryModel = (tikiItem) => {
+convertTikiItemToProductModel = (tikiItem) => {
   return {
     id: tikiItem.id,
     name: tikiItem.name,
@@ -275,15 +267,13 @@ fetchShopeeProductData = (itemId, shopId) => {
   return fetch(url)
     .then((res) => res.json())
     .then(async (shopee) => {
-      const productHistory = await convertShopeeItemToProductHistoryModel(
-        shopee.data
-      );
-      productHistory.sellers = Array.from(productHistory.sellers);
-      return productHistory;
+      const product = await convertShopeeItemToProductModel(shopee.data);
+      product.sellers = Array.from(product.sellers);
+      return product;
     });
 };
 
-convertShopeeItemToProductHistoryModel = async (shopeeItem) => {
+convertShopeeItemToProductModel = async (shopeeItem) => {
   const shopeeSeller = await fetchShopeeSeller(shopeeItem.shopid);
   const imageUrls = getAllShopeeImageUrls(shopeeItem);
   return {
@@ -331,21 +321,17 @@ getShopeeSellerMap = (shopeeSeller, price) => {
   return sellers;
 };
 
-convertPersistedProductHistoryModelToProductHistoryResponse = (
-  persistedProductHistoryObject
-) => {
+convertPersistedProductModelToProductResponse = (persistedProduct) => {
   return {
-    id: persistedProductHistoryObject.id,
-    name: persistedProductHistoryObject.name,
-    thumbnailUrl: persistedProductHistoryObject.thumbnailUrl,
-    imagesUrls: persistedProductHistoryObject.imagesUrls,
-    origin: persistedProductHistoryObject.origin,
-    sellers: Array.from(
-      persistedProductHistoryObject.sellers,
-      ([sellerId, seller]) =>
-        convertPersistedSellerToSellerResponse(sellerId, seller)
+    id: persistedProduct.id,
+    name: persistedProduct.name,
+    thumbnailUrl: persistedProduct.thumbnailUrl,
+    imagesUrls: persistedProduct.imagesUrls,
+    origin: persistedProduct.origin,
+    sellers: Array.from(persistedProduct.sellers, ([sellerId, seller]) =>
+      convertPersistedSellerToSellerResponse(sellerId, seller)
     ),
-    lastTrackedDate: persistedProductHistoryObject.lastTrackedDate,
+    lastTrackedDate: persistedProduct.lastTrackedDate,
   };
 };
 
@@ -378,9 +364,9 @@ convertPersistedPriceHistoryToPriceHistoryResponse = (
 
 setInterval(() => {
   console.log("TRACKING...");
-  ProductHistory.find({}, (err, productHistories) => {
-    productHistories.forEach((productHistory) => {
-      checkChangedPriceProduct(productHistory);
+  Product.find({}, (err, products) => {
+    products.forEach((product) => {
+      checkChangedPriceProduct(product);
     });
     if (err) console.error(err);
   });

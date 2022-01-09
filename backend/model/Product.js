@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const productHistorySchema = mongoose.Schema({
+const productSchema = mongoose.Schema({
   id: String,
   name: String,
   thumbnailUrl: String,
@@ -17,4 +17,4 @@ const productHistorySchema = mongoose.Schema({
   lastTrackedDate: Date,
 });
 
-module.exports = mongoose.model("ProductHistory", productHistorySchema);
+module.exports = mongoose.model("Product", productSchema);
