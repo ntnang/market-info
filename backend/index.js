@@ -38,7 +38,7 @@ app.get("/api/:origin/product/current-info/:itemId/:shopId?", (req, res) => {
   }
 });
 
-app.get("/api/:origin/product/history/:itemId", (req, res) => {
+app.get("/api/:origin/product/:itemId", (req, res) => {
   const query = { id: req.params.itemId, origin: req.params.origin };
   Product.findOne(query, (err, product) => {
     if (err) {
@@ -55,7 +55,7 @@ app.get("/api/:origin/product/history/:itemId", (req, res) => {
   });
 });
 
-app.get("/api/product/latest/history/", (_, res) => {
+app.get("/api/product/latest", (_, res) => {
   Product.findOne()
     .sort({ lastTrackedDate: -1 })
     .exec((err, lastTrackedProduct) => {
