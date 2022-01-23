@@ -65,7 +65,7 @@ const updatePriceHistoriesIfChanged = (newProduct, persistedProduct) => {
     const newSeller = newSellers.get(sellerId);
     persistedProductSellers.set(sellerId, {
       name: newSeller.name,
-      logoUrl: newSeller.logo,
+      logo: { url: newSeller.logo },
       priceHistories: [
         {
           price: newSeller.priceHistories[0].price,
@@ -127,14 +127,14 @@ const getAllTikiSellers = (item) => {
   const sellers = new Map();
   const currentSeller = {
     name: item.current_seller.name,
-    logoUrl: item.current_seller.logo,
+    logo: { url: item.current_seller.logo },
     priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
   };
   sellers.set(item.current_seller.id.toString(), currentSeller);
   item.other_sellers.forEach((seller) => {
     const otherSeller = {
       name: seller.name,
-      logoUrl: seller.logo,
+      logo: { url: seller.logo },
       priceHistories: [{ price: seller.price, trackedDate: null }],
     };
     sellers.set(seller.id.toString(), otherSeller);
@@ -184,7 +184,7 @@ const fetchShopeeSeller = (shopId) => {
       return {
         id: shopData.shopid,
         name: shopData.name,
-        logoUrl: `https://cf.shopee.vn/file/${shopData.account.portrait}`,
+        logo: { url: `https://cf.shopee.vn/file/${shopData.account.portrait}` },
       };
     });
 };
@@ -194,7 +194,7 @@ const getShopeeSellerMap = (shopeeSeller, price) => {
   const shortenedPrice = price / SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE;
   const currentSeller = {
     name: shopeeSeller.name,
-    logoUrl: shopeeSeller.logoUrl,
+    logo: { url: shopeeSeller.logoUrl },
     priceHistories: [{ price: shortenedPrice, trackedDate: null }],
   };
   sellers.set(shopeeSeller.id.toString(), currentSeller);
@@ -223,7 +223,7 @@ const convertPersistedSellerToSellerResponse = (
     persistedSellerId,
     {
       name: persistedSeller.name,
-      logoUrl: persistedSeller.logoUrl,
+      logo: { url: persistedSeller.logo.url },
       priceHistories: Array.from(
         persistedSeller.priceHistories,
         (priceHistory) =>
