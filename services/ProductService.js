@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const ProductOrigin = require("../constants/ProductOrigin");
 
 const SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
 const fetchTikiProductData = (id) => {
@@ -109,7 +110,7 @@ const convertTikiItemToProductModel = (tikiItem) => {
     name: tikiItem.name,
     thumbnailUrl: tikiItem.thumbnail_url,
     imagesUrls: getAllTikiImageUrls(tikiItem),
-    origin: TIKI_VN,
+    origin: ProductOrigin.TIKI_VN,
     sellers: getAllTikiSellers(tikiItem),
     lastTrackedDate: null,
   };
@@ -161,7 +162,7 @@ const convertShopeeItemToProductModel = async (shopeeItem) => {
     name: shopeeItem.name,
     thumbnailUrl: `${imageUrls[0]}_tn`,
     imagesUrls: imageUrls,
-    origin: SHOPEE_VN,
+    origin: ProductOrigin.SHOPEE_VN,
     sellers: getShopeeSellerMap(shopeeSeller, shopeeItem.price_max),
     lastTrackedDate: null,
   };
