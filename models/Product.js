@@ -10,10 +10,7 @@ const productSchema = mongoose.Schema({
     type: Map,
     of: {
       name: String,
-      logo: {
-        url: String,
-        dominantColorRgb: [Number],
-      },
+      logoUrl: String,
       priceHistories: [{ price: Number, trackedDate: Date }],
     },
   },
