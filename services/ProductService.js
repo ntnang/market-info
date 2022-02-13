@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const LodashLang = require("lodash/lang");
 const ProductOrigin = require("../constants/ProductOrigin");
 
 const SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
@@ -26,14 +27,14 @@ const checkChangedPriceProduct = (persistedProduct) => {
   })
     .then((res) => res.json())
     .then((item) => {
-      return updatePriceHistoriesIfChanged(
+      return updatePriceHistories(
         convertTikiItemToProductModel(item),
         persistedProduct
       );
     });
 };
 
-const updatePriceHistoriesIfChanged = (newProduct, persistedProduct) => {
+const updatePriceHistories = (newProduct, persistedProduct) => {
   let anySellerPriceChanged = false;
   const currentDateTime = new Date();
   const newSellers = newProduct.sellers;
@@ -109,34 +110,97 @@ const convertTikiItemToProductModel = (tikiItem) => {
     id: tikiItem.id,
     name: tikiItem.name,
     thumbnailUrl: tikiItem.thumbnail_url,
-    imagesUrls: getAllTikiImageUrls(tikiItem),
+    imagesUrls: tikiItem.images.map((image) => image.base_url),
     origin: ProductOrigin.TIKI_VN,
-    sellers: getAllTikiSellers(tikiItem),
+    minPrice: tikiItem.price,
+    options: tikiItem.configurable_options.map((option) => ({
+      name: option.name,
+      values: option.values,
+    })),
+    variants: getTikiItemConfigurableProducts(tikiItem),
+    sellers: getTikiSellers(tikiItem),
     lastTrackedDate: null,
   };
 };
 
-const getAllTikiImageUrls = (item) => {
-  const imageUrls = [];
-  item.images.forEach((image) => {
-    imageUrls.push(image.base_url);
+const getTikiItemConfigurableProducts = (tikiItem) => {
+  const products = new Map();
+  tikiItem.configurable_products.forEach((product) => {
+    products.set(product.id, {
+      name: product.name,
+      imagesUrls: product.images.map((image) => image.large_url),
+      configurations: getProductConfigurations(
+        product,
+        tikiItem.configurable_options
+      ),
+      sellers: getTikiConfigurableProductsSellers(tikiItem),
+    });
   });
-  return imageUrls;
+  return products;
 };
 
-const getAllTikiSellers = (item) => {
+const getProductConfigurations = (product, options) => {
+  const configurations = [];
+  options.forEach((option) => {
+    configurations.push({ name: option.name, value: product[option.code] });
+  });
+  return configurations;
+};
+
+const getTikiConfigurableProductsSellers = (item) => {
+  const sellers = new Map();
+  item.configurable_products.forEach((product) => {
+    sellers.set(product.seller.id.toString(), {
+      priceHistories: [{ price: product.price, trackedDate: null }],
+    });
+  });
+  return sellers;
+};
+
+const getTikiConfigurableProductsOtherSellers = (item, productVariants) => {
+  item.other_sellers.forEach((seller) => {
+    const url = `https://tiki.vn/api/v2/products/${item.id}?spid=${seller.product_id}`;
+    fetch(url, {
+      headers: {
+        "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
+      },
+    })
+      .then((res) => res.json())
+      .then((subItem) => {
+        subItem.configurable_products.forEach((product) => {
+          const sameConfigurationProduct = productVariants.find((variant) =>
+            LodashLang.isEqual(
+              variant.configurations,
+              getProductConfigurations(product, subItem.configurable_options)
+            )
+          );
+          sameConfigurationProduct.sellers.set(product.seller.id.toString(), {
+            priceHistories: [{ price: product.price, trackedDate: null }],
+          });
+        });
+      });
+  });
+};
+
+const getTikiSellers = (item) => {
   const sellers = new Map();
   const currentSeller = {
     name: item.current_seller.name,
     logoUrl: item.current_seller.logo,
-    priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
+    priceHistories:
+      item.type === "simple"
+        ? [{ price: item.current_seller.price, trackedDate: null }]
+        : null,
   };
   sellers.set(item.current_seller.id.toString(), currentSeller);
   item.other_sellers.forEach((seller) => {
     const otherSeller = {
       name: seller.name,
       logoUrl: seller.logo,
-      priceHistories: [{ price: seller.price, trackedDate: null }],
+      priceHistories:
+        item.type === "simple"
+          ? [{ price: seller.price, trackedDate: null }]
+          : null,
     };
     sellers.set(seller.id.toString(), otherSeller);
   });
@@ -246,11 +310,10 @@ const convertPersistedPriceHistoryToPriceHistoryResponse = (
 module.exports = {
   fetchTikiProductData: fetchTikiProductData,
   checkChangedPriceProduct: checkChangedPriceProduct,
-  updatePriceHistoriesIfChanged: updatePriceHistoriesIfChanged,
+  updatePriceHistoriesIfChanged: updatePriceHistories,
   setTrackedDate: setTrackedDate,
   convertTikiItemToProductModel: convertTikiItemToProductModel,
-  getAllTikiImageUrls: getAllTikiImageUrls,
-  getAllTikiSellers: getAllTikiSellers,
+  getTikiSellers: getTikiSellers,
   fetchShopeeProductData: fetchShopeeProductData,
   convertShopeeItemToProductModel: convertShopeeItemToProductModel,
   getAllShopeeImageUrls: getAllShopeeImageUrls,
@@ -262,4 +325,9 @@ module.exports = {
     convertPersistedSellerToSellerResponse,
   convertPersistedPriceHistoryToPriceHistoryResponse:
     convertPersistedPriceHistoryToPriceHistoryResponse,
+  getProductConfigurations: getProductConfigurations,
+  getTikiConfigurableProductsSellers: getTikiConfigurableProductsSellers,
+  getTikiItemConfigurableProducts: getTikiItemConfigurableProducts,
+  getTikiConfigurableProductsOtherSellers:
+    getTikiConfigurableProductsOtherSellers,
 };
