@@ -11,8 +11,72 @@ const fetchTikiProductData = (id) => {
     },
   })
     .then((res) => res.json())
-    .then((item) => {
-      const product = convertTikiItemToProductModel(item);
+    .then(async (item) => {
+      let product = convertTikiItemToProductModel(item);
+      product = await getTikiConfigurableProductsOtherSellers(item).then(
+        (subItems) => {
+          subItems.forEach((subItem) => {
+            subItem.configurable_products.forEach((configurableProduct) => {
+              const sameConfigurationProduct = Array.from(
+                product.variants.values()
+              ).find((variant) =>
+                LodashLang.isEqual(
+                  variant.configurations,
+                  getProductConfigurations(
+                    configurableProduct,
+                    subItem.configurable_options
+                  )
+                )
+              );
+              if (sameConfigurationProduct) {
+                sameConfigurationProduct.sellers.set(
+                  configurableProduct.seller.id.toString(),
+                  {
+                    priceHistories: [
+                      { price: configurableProduct.price, trackedDate: null },
+                    ],
+                  }
+                );
+              } else {
+                product.variants.push([
+                  configurableProduct.id,
+                  {
+                    name: configurableProduct.name,
+                    imagesUrls: configurableProduct.images.map(
+                      (image) => image.large_url
+                    ),
+                    configurations: getProductConfigurations(
+                      configurableProduct,
+                      subItem.configurable_options
+                    ),
+                    sellers: new Map().set(
+                      configurableProduct.seller.id.toString(),
+                      {
+                        priceHistories: [
+                          {
+                            price: configurableProduct.price,
+                            trackedDate: null,
+                          },
+                        ],
+                      }
+                    ),
+                  },
+                ]);
+              }
+            });
+          });
+          return product;
+        }
+      );
+      return product;
+    })
+    .then((product) => {
+      // console.log("--------------------------------");
+      // console.log(product);
+      product.variants.forEach((variant) => {
+        variant.sellers = Array.from(variant.sellers);
+      });
+      product.variants = Array.from(product.variants);
       product.sellers = Array.from(product.sellers);
       return product;
     });
@@ -133,7 +197,7 @@ const getTikiItemConfigurableProducts = (tikiItem) => {
         product,
         tikiItem.configurable_options
       ),
-      sellers: getTikiConfigurableProductsSellers(tikiItem),
+      sellers: getTikiConfigurableProductsSellers(product),
     });
   });
   return products;
@@ -147,39 +211,25 @@ const getProductConfigurations = (product, options) => {
   return configurations;
 };
 
-const getTikiConfigurableProductsSellers = (item) => {
+const getTikiConfigurableProductsSellers = (product) => {
   const sellers = new Map();
-  item.configurable_products.forEach((product) => {
-    sellers.set(product.seller.id.toString(), {
-      priceHistories: [{ price: product.price, trackedDate: null }],
-    });
+  sellers.set(product.seller.id.toString(), {
+    priceHistories: [{ price: product.price, trackedDate: null }],
   });
   return sellers;
 };
 
-const getTikiConfigurableProductsOtherSellers = (item, productVariants) => {
-  item.other_sellers.forEach((seller) => {
-    const url = `https://tiki.vn/api/v2/products/${item.id}?spid=${seller.product_id}`;
-    fetch(url, {
-      headers: {
-        "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
-      },
+const getTikiConfigurableProductsOtherSellers = (item) => {
+  return Promise.all(
+    item.other_sellers.map((seller) => {
+      const url = `https://tiki.vn/api/v2/products/${item.id}?spid=${seller.product_id}`;
+      return fetch(url, {
+        headers: {
+          "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
+        },
+      }).then((res) => res.json());
     })
-      .then((res) => res.json())
-      .then((subItem) => {
-        subItem.configurable_products.forEach((product) => {
-          const sameConfigurationProduct = productVariants.find((variant) =>
-            LodashLang.isEqual(
-              variant.configurations,
-              getProductConfigurations(product, subItem.configurable_options)
-            )
-          );
-          sameConfigurationProduct.sellers.set(product.seller.id.toString(), {
-            priceHistories: [{ price: product.price, trackedDate: null }],
-          });
-        });
-      });
-  });
+  );
 };
 
 const getTikiSellers = (item) => {
