@@ -2,21 +2,19 @@ const express = require("express");
 const app = express();
 const ProductService = require("../services/ProductService");
 const Product = require("../models/Product");
-const ProductOrigin = require("../constants/ProductOrigin");
 
 app.get("/api/:origin/product/current-info/:itemId/:shopId?", (req, res) => {
-  if (req.params.origin == ProductOrigin.TIKI_VN) {
-    ProductService.fetchTikiProductData(req.params.itemId).then((tikiProduct) =>
-      res.status(305).send(tikiProduct)
-    );
-  } else if (req.params.origin == ProductOrigin.SHOPEE_VN) {
-    ProductService.fetchShopeeProductData(
-      req.params.itemId,
-      req.params.shopId
-    ).then((shopeeProduct) => res.status(305).send(shopeeProduct));
-  } else {
-    res.status(404).send("Not supported origin");
-  }
+  ProductService.fetchProduct(
+    req.params.origin,
+    req.params.itemId,
+    req.params.shopId
+  ).then((product) => {
+    if (product) {
+      res.status(305).send(product);
+    } else {
+      res.status(404).send("Not supported origin");
+    }
+  });
 });
 
 app.get("/api/:origin/product/:itemId", (req, res) => {
@@ -89,7 +87,7 @@ app.post("/api/product/:id", async (req, res) => {
         console.error(err);
         res.status(500).send(err);
       } else {
-        const isChanged = ProductService.updatePriceHistoriesIfChanged(
+        const isChanged = ProductService.updatePriceHistories(
           newProduct,
           persistedProduct
         );
