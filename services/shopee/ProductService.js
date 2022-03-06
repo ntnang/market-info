@@ -1,17 +1,16 @@
 const fetch = require("node-fetch");
 const ProductOrigin = require("../../constants/ProductOrigin");
+const ShopeeRestClient = require("../../clients/ShopeeRestClient");
 
-const SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
+const NUMBER_OF_DECIMAL_PLACES_IN_PRICE = 100000;
+const IMAGES_BASE_URL = "https://cf.shopee.vn/file";
 
-const fetchProduct = (itemId, shopId) => {
-  const url = `https://shopee.vn/api/v4/item/get?itemid=${itemId}&shopid=${shopId}`;
-  return fetch(url)
-    .then((res) => res.json())
-    .then(async (shopee) => {
-      const product = await convertToProductModel(shopee.data);
-      product.sellers = Array.from(product.sellers);
-      return product;
-    });
+const getProduct = (itemId, shopId) => {
+  return ShopeeRestClient.fetchProduct(itemId, shopId).then(async (shopee) => {
+    const product = await convertToProductModel(shopee.data);
+    product.sellers = Array.from(product.sellers);
+    return product;
+  });
 };
 
 const convertToProductModel = async (shopeeItem) => {
@@ -30,7 +29,7 @@ const convertToProductModel = async (shopeeItem) => {
 
 const getSellerMap = (shopeeSeller, price) => {
   const sellers = new Map();
-  const shortenedPrice = price / SHOPEE_NUMBER_OF_DECIMAL_PLACES_IN_PRICE;
+  const shortenedPrice = price / NUMBER_OF_DECIMAL_PLACES_IN_PRICE;
   const currentSeller = {
     name: shopeeSeller.name,
     logoUrl: shopeeSeller.logoUrl,
@@ -43,27 +42,24 @@ const getSellerMap = (shopeeSeller, price) => {
 const getAllImageUrls = (item) => {
   const imageUrls = [];
   item.images.forEach((imageHashCode) => {
-    imageUrls.push(`https://cf.shopee.vn/file/${imageHashCode}`);
+    imageUrls.push(`${IMAGES_BASE_URL}/${imageHashCode}`);
   });
   return imageUrls;
 };
 
 const fetchSeller = (shopId) => {
-  const url = `https://shopee.vn/api/v4/product/get_shop_info?shopid=${shopId}`;
-  return fetch(url)
-    .then((res) => res.json())
-    .then((shop) => {
-      const shopData = shop.data;
-      return {
-        id: shopData.shopid,
-        name: shopData.name,
-        logoUrl: `https://cf.shopee.vn/file/${shopData.account.portrait}`,
-      };
-    });
+  return ShopeeRestClient.fetchShop(shopId).then((shop) => {
+    const shopData = shop.data;
+    return {
+      id: shopData.shopid,
+      name: shopData.name,
+      logoUrl: `${IMAGES_BASE_URL}/${shopData.account.portrait}`,
+    };
+  });
 };
 
 module.exports = {
-  fetchProduct: fetchProduct,
+  getProduct: getProduct,
   convertToProductModel: convertToProductModel,
   getAllImageUrls: getAllImageUrls,
   fetchSeller: fetchSeller,

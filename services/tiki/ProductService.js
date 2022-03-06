@@ -1,21 +1,16 @@
 const fetch = require("node-fetch");
 const LodashLang = require("lodash/lang");
 const ProductOrigin = require("../../constants/ProductOrigin");
+const TikiRestClient = require("../../clients/TikiRestClient");
 
-const fetchProduct = (id) => {
-  const url = `https://tiki.vn/api/v2/products/${id}`;
-  return fetch(url, {
-    headers: {
-      "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
-    },
-  })
-    .then((res) => res.json())
+const getProduct = (id) => {
+  return TikiRestClient.fetchProduct(id)
     .then(async (item) => {
       let product = convertToProductModel(item);
       product = await getConfigurableProductsOtherSellers(item).then(
-        (subItems) => {
-          subItems.forEach((subItem) => {
-            subItem.configurable_products.forEach((configurableProduct) => {
+        (sellerItems) => {
+          sellerItems.forEach((sellerItem) => {
+            sellerItem.configurable_products.forEach((configurableProduct) => {
               const sameConfigurationProduct = Array.from(
                 product.variants.values()
               ).find((variant) =>
@@ -23,7 +18,7 @@ const fetchProduct = (id) => {
                   variant.configurations,
                   getProductConfigurations(
                     configurableProduct,
-                    subItem.configurable_options
+                    sellerItem.configurable_options
                   )
                 )
               );
@@ -46,7 +41,7 @@ const fetchProduct = (id) => {
                     ),
                     configurations: getProductConfigurations(
                       configurableProduct,
-                      subItem.configurable_options
+                      sellerItem.configurable_options
                     ),
                     sellers: new Map().set(
                       configurableProduct.seller.id.toString(),
@@ -79,33 +74,33 @@ const fetchProduct = (id) => {
     });
 };
 
-const convertToProductModel = (tikiItem) => {
+const convertToProductModel = (item) => {
   return {
-    id: tikiItem.id,
-    name: tikiItem.name,
-    thumbnailUrl: tikiItem.thumbnail_url,
-    imagesUrls: tikiItem.images.map((image) => image.base_url),
+    id: item.id,
+    name: item.name,
+    thumbnailUrl: item.thumbnail_url,
+    imagesUrls: item.images.map((image) => image.base_url),
     origin: ProductOrigin.TIKI_VN,
-    minPrice: tikiItem.price,
-    options: tikiItem.configurable_options.map((option) => ({
+    minPrice: item.price,
+    options: item.configurable_options.map((option) => ({
       name: option.name,
       values: option.values,
     })),
-    variants: getConfigurableProducts(tikiItem),
-    sellers: getSellers(tikiItem),
+    variants: getConfigurableProducts(item),
+    sellers: getSellers(item),
     lastTrackedDate: null,
   };
 };
 
-const getConfigurableProducts = (tikiItem) => {
+const getConfigurableProducts = (item) => {
   const products = new Map();
-  tikiItem.configurable_products.forEach((product) => {
+  item.configurable_products.forEach((product) => {
     products.set(product.id, {
       name: product.name,
       imagesUrls: product.images.map((image) => image.large_url),
       configurations: getProductConfigurations(
         product,
-        tikiItem.configurable_options
+        item.configurable_options
       ),
       sellers: getConfigurableProductsSellers(product),
     });
@@ -124,12 +119,10 @@ const getConfigurableProductsSellers = (product) => {
 const getConfigurableProductsOtherSellers = (item) => {
   return Promise.all(
     item.other_sellers.map((seller) => {
-      const url = `https://tiki.vn/api/v2/products/${item.id}?spid=${seller.product_id}`;
-      return fetch(url, {
-        headers: {
-          "User-Agent": "", // tiki requires user-agent header, without it we'll get 404
-        },
-      }).then((res) => res.json());
+      return TikiRestClient.fetchConfigurableProducts(
+        item.id,
+        seller.product_id
+      );
     })
   );
 };
@@ -168,7 +161,7 @@ const getProductConfigurations = (product, options) => {
 };
 
 module.exports = {
-  fetchProduct: fetchProduct,
+  getProduct: getProduct,
   convertToProductModel: convertToProductModel,
   getSellers: getSellers,
   getConfigurableProductsSellers: getConfigurableProductsSellers,

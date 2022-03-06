@@ -3,6 +3,8 @@ const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const ProductResource = require("./resources/ProductResource");
+const ProductService = require("./services/ProductService");
+const Product = require("./models/Product");
 
 const PORT = 3001;
 const TRACKING_INTERVAL = 3600000; // One hour
@@ -25,7 +27,7 @@ setInterval(() => {
   console.log("TRACKING...");
   Product.find({}, (err, products) => {
     products.forEach((product) => {
-      checkChangedPriceProduct(product);
+      ProductService.checkChangedPriceProduct(product);
     });
     if (err) console.error(err);
   });
