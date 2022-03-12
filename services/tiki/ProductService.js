@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 const LodashLang = require("lodash/lang");
 const ProductOrigin = require("../../constants/ProductOrigin");
 const TikiRestClient = require("../../clients/TikiRestClient");

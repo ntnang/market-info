@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 const ProductOrigin = require("../../constants/ProductOrigin");
 const ShopeeRestClient = require("../../clients/ShopeeRestClient");
 
@@ -8,6 +7,9 @@ const IMAGES_BASE_URL = "https://cf.shopee.vn/file";
 const getProduct = (itemId, shopId) => {
   return ShopeeRestClient.fetchProduct(itemId, shopId).then(async (shopee) => {
     const product = await convertToProductModel(shopee.data);
+    product.variants.forEach((variant) => {
+      variant.sellers = Array.from(variant.sellers);
+    });
     product.sellers = Array.from(product.sellers);
     return product;
   });
@@ -22,18 +24,47 @@ const convertToProductModel = async (shopeeItem) => {
     thumbnailUrl: `${imageUrls[0]}_tn`,
     imagesUrls: imageUrls,
     origin: ProductOrigin.SHOPEE_VN,
-    sellers: getSellerMap(shopeeSeller, shopeeItem.price_max),
+    minPrice: shopeeItem.price_min / NUMBER_OF_DECIMAL_PLACES_IN_PRICE,
+    maxPrice: shopeeItem.price_max / NUMBER_OF_DECIMAL_PLACES_IN_PRICE,
+    options: shopeeItem.tier_variations.map((variation) => ({
+      name: variation.name,
+      values: variation.options,
+    })),
+    variants: getModels(shopeeItem, shopeeSeller),
+    sellers: getSellers(shopeeSeller),
     lastTrackedDate: null,
   };
 };
 
-const getSellerMap = (shopeeSeller, price) => {
+const getModels = (shopeeItem, shopeeSeller) => {
+  return shopeeItem.models.map((model) => ({
+    name: model.name,
+    imagesUrls: model.extinfo.tier_index.map(
+      (tierIndex, index) => shopeeItem.tier_variations[index].images[tierIndex]
+    ),
+    configurations: model.extinfo.tier_index.map((tierIndex, index) => ({
+      option: shopeeItem.tier_variations[index].name,
+      value: shopeeItem.tier_variations[index].options[tierIndex],
+    })),
+    sellers: getModelSellers(shopeeSeller, model.price),
+  }));
+};
+
+const getModelSellers = (shopeeSeller, price) => {
   const sellers = new Map();
   const shortenedPrice = price / NUMBER_OF_DECIMAL_PLACES_IN_PRICE;
   const currentSeller = {
+    priceHistories: [{ price: shortenedPrice, trackedDate: null }],
+  };
+  sellers.set(shopeeSeller.id.toString(), currentSeller);
+  return sellers;
+};
+
+const getSellers = (shopeeSeller) => {
+  const sellers = new Map();
+  const currentSeller = {
     name: shopeeSeller.name,
     logoUrl: shopeeSeller.logoUrl,
-    priceHistories: [{ price: shortenedPrice, trackedDate: null }],
   };
   sellers.set(shopeeSeller.id.toString(), currentSeller);
   return sellers;
@@ -60,8 +91,10 @@ const fetchSeller = (shopId) => {
 
 module.exports = {
   getProduct: getProduct,
+  getModelSellers: getModelSellers,
+  getModels: getModels,
   convertToProductModel: convertToProductModel,
   getAllImageUrls: getAllImageUrls,
   fetchSeller: fetchSeller,
-  getSellerMap: getSellerMap,
+  getSellerMap: getSellers,
 };
