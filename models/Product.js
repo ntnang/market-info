@@ -4,7 +4,6 @@ const productSchema = mongoose.Schema({
   id: String,
   name: String,
   thumbnailUrl: String,
-  imagesUrls: [String],
   origin: String,
   minPrice: Number,
   maxPrice: Number,
@@ -28,7 +27,6 @@ const productSchema = mongoose.Schema({
     of: {
       name: String,
       logoUrl: String,
-      priceHistories: [{ price: Number, trackedDate: Date }],
     },
   },
   lastTrackedDate: Date,
