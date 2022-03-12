@@ -39,9 +39,10 @@ const convertToProductModel = async (shopeeItem) => {
 const getModels = (shopeeItem, shopeeSeller) => {
   return shopeeItem.models.map((model) => ({
     name: model.name,
-    imagesUrls: model.extinfo.tier_index.map(
-      (tierIndex, index) => shopeeItem.tier_variations[index].images[tierIndex]
-    ),
+    imagesUrls: model.extinfo.tier_index.map((tierIndex, index) => {
+      const images = shopeeItem.tier_variations[index].images;
+      return images ? images[tierIndex] : images;
+    }),
     configurations: model.extinfo.tier_index.map((tierIndex, index) => ({
       option: shopeeItem.tier_variations[index].name,
       value: shopeeItem.tier_variations[index].options[tierIndex],
