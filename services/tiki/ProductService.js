@@ -71,6 +71,20 @@ const getProduct = (id) => {
       return product;
     })
     .then((product) => {
+      const allPrices = Array.from(product.variants.values()).flatMap(
+        (variant) => {
+          return Array.from(variant.sellers.values()).flatMap((seller) =>
+            Array.from(seller.priceHistories.values()).flatMap(
+              (priceHistory) => priceHistory.price
+            )
+          );
+        }
+      );
+      product.minPrice = Math.min(...allPrices);
+      product.maxPrice = Math.max(...allPrices);
+      return product;
+    })
+    .then((product) => {
       product.variants.forEach((variant) => {
         variant.sellers = Array.from(variant.sellers);
       });
