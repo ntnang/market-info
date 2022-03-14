@@ -115,7 +115,7 @@ const getConfigurableOptions = (item) => {
   return item.configurable_options
     ? item.configurable_options.map((option) => ({
         name: option.name,
-        values: option.values,
+        values: option.values.map((value) => value.label),
       }))
     : [];
 };
