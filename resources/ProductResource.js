@@ -80,7 +80,7 @@ app.get("/api/products", (_, res) => {
 app.post("/api/product/:id", async (req, res) => {
   const query = { id: req.params.id };
   const itemExisted = await Product.exists(query);
-  const newProduct = setTrackedDate(req.body);
+  const newProduct = ProductService.setTrackedDate(req.body);
   if (itemExisted) {
     Product.findOne(query).exec((err, persistedProduct) => {
       if (err) {

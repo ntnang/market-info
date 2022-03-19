@@ -10,6 +10,7 @@ const getProduct = (itemId, shopId) => {
     product.variants.forEach((variant) => {
       variant.sellers = Array.from(variant.sellers);
     });
+    product.variants = Array.from(product.variants);
     product.sellers = Array.from(product.sellers);
     return product;
   });
@@ -37,18 +38,23 @@ const convertToProductModel = async (shopeeItem) => {
 };
 
 const getModels = (shopeeItem, shopeeSeller) => {
-  return shopeeItem.models.map((model) => ({
-    name: model.name,
-    imagesUrls: model.extinfo.tier_index.map((tierIndex, index) => {
-      const images = shopeeItem.tier_variations[index].images;
-      return images ? images[tierIndex] : images;
-    }),
-    configurations: model.extinfo.tier_index.map((tierIndex, index) => ({
-      option: shopeeItem.tier_variations[index].name,
-      value: shopeeItem.tier_variations[index].options[tierIndex],
-    })),
-    sellers: getModelSellers(shopeeSeller, model.price),
-  }));
+  return new Map(
+    shopeeItem.models.map((model) => [
+      model.modelid,
+      {
+        name: model.name,
+        imagesUrls: model.extinfo.tier_index.map((tierIndex, index) => {
+          const images = shopeeItem.tier_variations[index].images;
+          return images ? images[tierIndex] : images;
+        }),
+        configurations: model.extinfo.tier_index.map((tierIndex, index) => ({
+          option: shopeeItem.tier_variations[index].name,
+          value: shopeeItem.tier_variations[index].options[tierIndex],
+        })),
+        sellers: getModelSellers(shopeeSeller, model.price),
+      },
+    ])
+  );
 };
 
 const getModelSellers = (shopeeSeller, price) => {
