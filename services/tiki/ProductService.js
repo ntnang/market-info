@@ -157,25 +157,21 @@ const getSellersPrices = (item) => {
     id: seller.id.toString(),
     priceHistories: [{ price: seller.price, trackedDate: null }],
   }));
-  return [...currentSellerPrice, ...otherSellerPrices];
+  return [currentSellerPrice, ...otherSellerPrices];
 };
 
 const getSellersMetadata = (item) => {
-  const currentSellerMetadata = [
-    item.current_seller.id.toString(),
-    {
-      name: item.current_seller.name,
-      logoUrl: item.current_seller.logo,
-    },
-  ];
-  const otherSellerMetadata = item.other_sellers.map((seller) => [
-    seller.id.toString(),
-    {
-      name: seller.name,
-      logoUrl: seller.logo,
-    },
-  ]);
-  return [...currentSellerMetadata, ...otherSellerMetadata];
+  const currentSellerMetadata = {
+    id: item.current_seller.id.toString(),
+    name: item.current_seller.name,
+    logoUrl: item.current_seller.logo,
+  };
+  const otherSellerMetadata = item.other_sellers.map((seller) => ({
+    id: seller.id.toString(),
+    name: seller.name,
+    logoUrl: seller.logo,
+  }));
+  return [currentSellerMetadata, ...otherSellerMetadata];
 };
 
 const getProductConfigurations = (product, options) => {
