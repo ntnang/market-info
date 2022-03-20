@@ -4,31 +4,32 @@ const productSchema = mongoose.Schema({
   id: String,
   name: String,
   thumbnailUrl: String,
+  imagesUrls: String,
   origin: String,
   minPrice: Number,
   maxPrice: Number,
   options: [{ name: String, values: [String] }],
-  variants: {
-    type: Map,
-    of: {
+  variants: [
+    {
+      id: String,
       name: String,
       imagesUrls: [String],
       configurations: [{ option: String, value: String }],
-      sellers: {
-        type: Map,
-        of: {
+      sellers: [
+        {
+          id: String,
           priceHistories: [{ price: Number, trackedDate: Date }],
         },
-      },
+      ],
     },
-  },
-  sellers: {
-    type: Map,
-    of: {
+  ],
+  sellers: [
+    {
+      id: String,
       name: String,
       logoUrl: String,
     },
-  },
+  ],
   lastTrackedDate: Date,
 });
 

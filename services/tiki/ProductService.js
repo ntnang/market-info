@@ -12,54 +12,49 @@ const getProduct = (id) => {
             sellerItems.forEach((sellerItem) => {
               sellerItem.configurable_products.forEach(
                 (configurableProduct) => {
-                  const sameConfigurationProduct = Array.from(
-                    product.variants.values()
-                  ).find((variant) =>
-                    LodashLang.isEqual(
-                      variant.configurations,
-                      getProductConfigurations(
-                        configurableProduct,
-                        sellerItem.configurable_options
-                      )
-                    )
-                  );
-                  if (sameConfigurationProduct) {
-                    sameConfigurationProduct.sellers.set(
-                      configurableProduct.seller.id.toString(),
-                      {
-                        priceHistories: [
-                          {
-                            price: configurableProduct.price,
-                            trackedDate: null,
-                          },
-                        ],
-                      }
-                    );
-                  } else {
-                    product.variants.push([
-                      configurableProduct.id,
-                      {
-                        name: configurableProduct.name,
-                        imagesUrls: configurableProduct.images.map(
-                          (image) => image.large_url
-                        ),
-                        configurations: getProductConfigurations(
+                  const sameConfigurationProduct = product.variants.find(
+                    (variant) =>
+                      LodashLang.isEqual(
+                        variant.configurations,
+                        getProductConfigurations(
                           configurableProduct,
                           sellerItem.configurable_options
-                        ),
-                        sellers: new Map().set(
-                          configurableProduct.seller.id.toString(),
-                          {
-                            priceHistories: [
-                              {
-                                price: configurableProduct.price,
-                                trackedDate: null,
-                              },
-                            ],
-                          }
-                        ),
-                      },
-                    ]);
+                        )
+                      )
+                  );
+                  if (sameConfigurationProduct) {
+                    sameConfigurationProduct.sellers.push({
+                      id: configurableProduct.seller.id.toString(),
+                      priceHistories: [
+                        {
+                          price: configurableProduct.price,
+                          trackedDate: null,
+                        },
+                      ],
+                    });
+                  } else {
+                    product.variants.push({
+                      id: configurableProduct.id,
+                      name: configurableProduct.name,
+                      imagesUrls: configurableProduct.images.map(
+                        (image) => image.large_url
+                      ),
+                      configurations: getProductConfigurations(
+                        configurableProduct,
+                        sellerItem.configurable_options
+                      ),
+                      sellers: [
+                        {
+                          id: configurableProduct.seller.id.toString(),
+                          priceHistories: [
+                            {
+                              price: configurableProduct.price,
+                              trackedDate: null,
+                            },
+                          ],
+                        },
+                      ],
+                    });
                   }
                 }
               );
@@ -71,25 +66,13 @@ const getProduct = (id) => {
       return product;
     })
     .then((product) => {
-      const allPrices = Array.from(product.variants.values()).flatMap(
-        (variant) => {
-          return Array.from(variant.sellers.values()).flatMap((seller) =>
-            Array.from(seller.priceHistories.values()).flatMap(
-              (priceHistory) => priceHistory.price
-            )
-          );
-        }
+      const allPrices = product.variants.flatMap((variant) =>
+        variant.sellers.flatMap((seller) =>
+          seller.priceHistories.map((priceHistory) => priceHistory.price)
+        )
       );
       product.minPrice = Math.min(...allPrices);
       product.maxPrice = Math.max(...allPrices);
-      return product;
-    })
-    .then((product) => {
-      product.variants.forEach((variant) => {
-        variant.sellers = Array.from(variant.sellers);
-      });
-      product.variants = Array.from(product.variants);
-      product.sellers = Array.from(product.sellers);
       return product;
     });
 };
@@ -121,38 +104,37 @@ const getConfigurableOptions = (item) => {
 };
 
 const getSimpleProduct = (item) => {
-  const products = new Map();
-  products.set(item.id, {
-    name: item.name,
-    imagesUrls: [],
-    configurations: [],
-    sellers: getSellersPrices(item),
-  });
-  return products;
+  return [
+    {
+      id: item.id,
+      name: item.name,
+      imagesUrls: [],
+      configurations: [],
+      sellers: getSellersPrices(item),
+    },
+  ];
 };
 
 const getConfigurableProducts = (item) => {
-  const products = new Map();
-  item.configurable_products.forEach((product) => {
-    products.set(product.id, {
-      name: product.name,
-      imagesUrls: product.images.map((image) => image.large_url),
-      configurations: getProductConfigurations(
-        product,
-        item.configurable_options
-      ),
-      sellers: getConfigurableProductsSellers(product),
-    });
-  });
-  return products;
+  return item.configurable_products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    imagesUrls: product.images.map((image) => image.large_url),
+    configurations: getProductConfigurations(
+      product,
+      item.configurable_options
+    ),
+    sellers: getConfigurableProductsSellers(product),
+  }));
 };
 
 const getConfigurableProductsSellers = (product) => {
-  const sellers = new Map();
-  sellers.set(product.seller.id.toString(), {
-    priceHistories: [{ price: product.price, trackedDate: null }],
-  });
-  return sellers;
+  return [
+    {
+      id: product.seller.id.toString(),
+      priceHistories: [{ price: product.price, trackedDate: null }],
+    },
+  ];
 };
 
 const getConfigurableProductsOtherSellers = (item) => {
@@ -167,35 +149,33 @@ const getConfigurableProductsOtherSellers = (item) => {
 };
 
 const getSellersPrices = (item) => {
-  const sellersPrices = new Map();
   const currentSellerPrice = {
+    id: item.current_seller.id.toString(),
     priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
   };
-  sellersPrices.set(item.current_seller.id.toString(), currentSellerPrice);
-  item.other_sellers.forEach((seller) => {
-    const otherSeller = {
-      priceHistories: [{ price: seller.price, trackedDate: null }],
-    };
-    sellersPrices.set(seller.id.toString(), otherSeller);
-  });
-  return sellersPrices;
+  const otherSellerPrices = item.other_sellers.map((seller) => ({
+    id: seller.id.toString(),
+    priceHistories: [{ price: seller.price, trackedDate: null }],
+  }));
+  return [...currentSellerPrice, ...otherSellerPrices];
 };
 
 const getSellersMetadata = (item) => {
-  const sellers = new Map();
-  const currentSeller = {
-    name: item.current_seller.name,
-    logoUrl: item.current_seller.logo,
-  };
-  sellers.set(item.current_seller.id.toString(), currentSeller);
-  item.other_sellers.forEach((seller) => {
-    const otherSeller = {
+  const currentSellerMetadata = [
+    item.current_seller.id.toString(),
+    {
+      name: item.current_seller.name,
+      logoUrl: item.current_seller.logo,
+    },
+  ];
+  const otherSellerMetadata = item.other_sellers.map((seller) => [
+    seller.id.toString(),
+    {
       name: seller.name,
       logoUrl: seller.logo,
-    };
-    sellers.set(seller.id.toString(), otherSeller);
-  });
-  return sellers;
+    },
+  ]);
+  return [...currentSellerMetadata, ...otherSellerMetadata];
 };
 
 const getProductConfigurations = (product, options) => {

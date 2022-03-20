@@ -6,83 +6,77 @@ const IMAGES_BASE_URL = "https://cf.shopee.vn/file";
 
 const getProduct = (itemId, shopId) => {
   return ShopeeRestClient.fetchProduct(itemId, shopId).then(async (shopee) => {
-    const product = await convertToProductModel(shopee.data);
-    product.variants.forEach((variant) => {
-      variant.sellers = Array.from(variant.sellers);
-    });
-    product.variants = Array.from(product.variants);
-    product.sellers = Array.from(product.sellers);
-    return product;
+    return await convertToProductModel(shopee.data);
   });
 };
 
 const convertToProductModel = async (shopeeItem) => {
   const shopeeSeller = await fetchSeller(shopeeItem.shopid);
-  const imageUrls = getAllImageUrls(shopeeItem);
   return {
     id: shopeeItem.itemid,
     name: shopeeItem.name,
-    thumbnailUrl: `${imageUrls[0]}_tn`,
-    imagesUrls: imageUrls,
+    thumbnailUrl: `${IMAGES_BASE_URL}/${shopeeItem.images[0]}_tn`,
+    imagesUrls: shopeeItem.images.map((image) => `${IMAGES_BASE_URL}/${image}`),
     origin: ProductOrigin.SHOPEE_VN,
     minPrice: shopeeItem.price_min / NUMBER_OF_DECIMAL_PLACES_IN_PRICE,
     maxPrice: shopeeItem.price_max / NUMBER_OF_DECIMAL_PLACES_IN_PRICE,
-    options: shopeeItem.tier_variations.map((variation) => ({
-      name: variation.name,
-      values: variation.options,
-    })),
+    options: getVariations(shopeeItem),
     variants: getModels(shopeeItem, shopeeSeller),
     sellers: getSellers(shopeeSeller),
     lastTrackedDate: null,
   };
 };
 
-const getModels = (shopeeItem, shopeeSeller) => {
-  return new Map(
-    shopeeItem.models.map((model) => [
-      model.modelid,
-      {
-        name: model.name,
-        imagesUrls: model.extinfo.tier_index.map((tierIndex, index) => {
-          const images = shopeeItem.tier_variations[index].images;
-          return images ? images[tierIndex] : images;
-        }),
-        configurations: model.extinfo.tier_index.map((tierIndex, index) => ({
-          option: shopeeItem.tier_variations[index].name,
-          value: shopeeItem.tier_variations[index].options[tierIndex],
-        })),
-        sellers: getModelSellers(shopeeSeller, model.price),
-      },
-    ])
-  );
+const getVariations = (shopeeItem) => {
+  return shopeeItem.tier_variations.map((variation) => ({
+    name: variation.name,
+    values: variation.options,
+  }));
 };
 
-const getModelSellers = (shopeeSeller, price) => {
-  const sellers = new Map();
-  const shortenedPrice = price / NUMBER_OF_DECIMAL_PLACES_IN_PRICE;
-  const currentSeller = {
-    priceHistories: [{ price: shortenedPrice, trackedDate: null }],
-  };
-  sellers.set(shopeeSeller.id.toString(), currentSeller);
-  return sellers;
+const getModels = (shopeeItem, shopeeSeller) => {
+  return shopeeItem.models.map((model) => ({
+    id: model.modelid,
+    name: model.name,
+    imagesUrls: getModelImagesUrls(shopeeItem, model),
+    configurations: model.extinfo.tier_index.map((tierIndex, index) => ({
+      option: shopeeItem.tier_variations[index].name,
+      value: shopeeItem.tier_variations[index].options[tierIndex],
+    })),
+    sellers: getModelSellerPrices(shopeeSeller, model.price),
+  }));
+};
+
+const getModelImagesUrls = (shopeeItem, model) => {
+  return model.extinfo.tier_index.flatMap((tierIndex, index) => {
+    const variationImages = shopeeItem.tier_variations[index].images;
+    const images = variationImages ? [variationImages[tierIndex]] : [];
+    return images.map((image) => `${IMAGES_BASE_URL}/${image}`);
+  });
+};
+
+const getModelSellerPrices = (shopeeSeller, modelPrice) => {
+  return [
+    {
+      id: shopeeSeller.id.toString(),
+      priceHistories: [
+        {
+          price: modelPrice / NUMBER_OF_DECIMAL_PLACES_IN_PRICE,
+          trackedDate: null,
+        },
+      ],
+    },
+  ];
 };
 
 const getSellers = (shopeeSeller) => {
-  const sellers = new Map();
-  const currentSeller = {
-    name: shopeeSeller.name,
-    logoUrl: shopeeSeller.logoUrl,
-  };
-  sellers.set(shopeeSeller.id.toString(), currentSeller);
-  return sellers;
-};
-
-const getAllImageUrls = (item) => {
-  const imageUrls = [];
-  item.images.forEach((imageHashCode) => {
-    imageUrls.push(`${IMAGES_BASE_URL}/${imageHashCode}`);
-  });
-  return imageUrls;
+  return [
+    {
+      id: shopeeSeller.id.toString(),
+      name: shopeeSeller.name,
+      logoUrl: shopeeSeller.logoUrl,
+    },
+  ];
 };
 
 const fetchSeller = (shopId) => {
@@ -98,10 +92,11 @@ const fetchSeller = (shopId) => {
 
 module.exports = {
   getProduct: getProduct,
-  getModelSellers: getModelSellers,
+  getVariations: getVariations,
   getModels: getModels,
+  getModelImagesUrls: getModelImagesUrls,
+  getModelSellerPrices: getModelSellerPrices,
   convertToProductModel: convertToProductModel,
-  getAllImageUrls: getAllImageUrls,
   fetchSeller: fetchSeller,
   getSellerMap: getSellers,
 };
