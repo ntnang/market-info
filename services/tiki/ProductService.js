@@ -84,7 +84,6 @@ const convertToProductModel = (item) => {
     thumbnailUrl: item.thumbnail_url,
     imagesUrls: item.images.map((image) => image.base_url),
     origin: ProductOrigin.TIKI_VN,
-    minPrice: item.price,
     options: getConfigurableOptions(item),
     variants: item.configurable_products
       ? getConfigurableProducts(item)

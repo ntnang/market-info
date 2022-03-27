@@ -27,7 +27,7 @@ setInterval(() => {
   console.log("TRACKING...");
   Product.find({}, (err, products) => {
     products.forEach((product) => {
-      ProductService.checkChangedPriceProduct(product);
+      ProductService.checkProductChanges(product);
     });
     if (err) console.error(err);
   });
