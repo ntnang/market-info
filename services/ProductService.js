@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 const LodashArray = require("lodash/array");
 const ProductOrigin = require("../constants/ProductOrigin");
 const TikiProductService = require("./tiki/ProductService");
@@ -17,20 +16,22 @@ const fetchProduct = (origin, itemId, shopId) => {
 };
 
 const checkProductChanges = (persistedProduct) => {
-  fetchProduct(persistedProduct.origin, persistedProduct.id, "").then(
-    (fetchedProduct) => {
-      const currentDateTime = new Date();
-      const isChanged = updateVariants(
-        fetchedProduct,
-        persistedProduct,
-        currentDateTime
-      );
-      if (isChanged) {
-        persistedProduct.lastTrackedDate = currentDateTime;
-      }
-      persistedProduct.save();
+  fetchProduct(
+    persistedProduct.origin,
+    persistedProduct.id,
+    persistedProduct.sellers[0].id
+  ).then((fetchedProduct) => {
+    const currentDateTime = new Date();
+    const isChanged = updateVariants(
+      fetchedProduct,
+      persistedProduct,
+      currentDateTime
+    );
+    if (isChanged) {
+      persistedProduct.lastTrackedDate = currentDateTime;
     }
-  );
+    persistedProduct.save();
+  });
 };
 
 const updateProductMetadata = (fetchedProduct, persistedProduct) => {
@@ -45,9 +46,17 @@ const updateProductMetadata = (fetchedProduct, persistedProduct) => {
     persisted.options.map((option) => option.name)
   );
 
-  const stillAvailableOptions = LodashArray.intersection(
-    fetchedProduct.options.map((option) => option.name),
-    persisted.options.map((option) => option.name)
+  persistedProduct.options.push(
+    fetchProduct.options.filter((option) => newOptions.includes(option.name))
+  );
+
+  persistedProduct.options.forEach((persistedOption) =>
+    LodashArray.union(
+      persistedOption.values,
+      fetchProduct.options.find(
+        (fetchedOption) => fetchedOption.name === persistedOption.name
+      ).values
+    )
   );
 };
 
