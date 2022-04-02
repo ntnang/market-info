@@ -31,7 +31,7 @@ app.get("/api/:origin/product/:itemId", (req, res) => {
           ProductService.convertPersistedProductModelToProductResponse(product)
         );
     } else {
-      res.status(404).send();
+      res.status(404).send("Product not found");
     }
   });
 });
@@ -53,7 +53,7 @@ app.get("/api/product/latest", (_, res) => {
             )
           );
       } else {
-        res.status(404).send();
+        res.status(404).send("Last tracked product not found");
       }
     });
 });
