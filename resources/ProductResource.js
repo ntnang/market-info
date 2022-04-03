@@ -10,7 +10,7 @@ app.get("/api/:origin/product/current-info/:itemId/:shopId?", (req, res) => {
     req.params.shopId
   ).then((product) => {
     if (product) {
-      res.status(305).send(product);
+      res.status(200).send(product);
     } else {
       res.status(404).send("Not supported origin");
     }
