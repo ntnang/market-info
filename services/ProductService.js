@@ -211,53 +211,14 @@ const setTrackedDate = (originalProduct) => {
   const trackedProduct = Object.assign({}, originalProduct);
   const currentDateTime = new Date();
   trackedProduct.lastTrackedDate = currentDateTime;
-  const sellersValue = new Map(originalProduct.sellers.value);
-  for (let seller of sellersValue.values()) {
-    seller.priceHistories[0].trackedDate = currentDateTime;
-  }
-  trackedProduct.sellers = sellersValue;
+  trackedProduct.variants.forEach((variant) =>
+    variant.sellers.forEach((seller) =>
+      seller.priceHistories.forEach(
+        (priceHistory) => (priceHistory.trackedDate = currentDateTime)
+      )
+    )
+  );
   return trackedProduct;
-};
-
-const convertPersistedProductModelToProductResponse = (persistedProduct) => {
-  return {
-    id: persistedProduct.id,
-    name: persistedProduct.name,
-    thumbnailUrl: persistedProduct.thumbnailUrl,
-    imagesUrls: persistedProduct.imagesUrls,
-    origin: persistedProduct.origin,
-    sellers: Array.from(persistedProduct.sellers, ([sellerId, seller]) =>
-      convertPersistedSellerToSellerResponse(sellerId, seller)
-    ),
-    lastTrackedDate: persistedProduct.lastTrackedDate,
-  };
-};
-
-const convertPersistedSellerToSellerResponse = (
-  persistedSellerId,
-  persistedSeller
-) => {
-  return [
-    persistedSellerId,
-    {
-      name: persistedSeller.name,
-      logoUrl: persistedSeller.logoUrl,
-      priceHistories: Array.from(
-        persistedSeller.priceHistories,
-        (priceHistory) =>
-          convertPersistedPriceHistoryToPriceHistoryResponse(priceHistory)
-      ),
-    },
-  ];
-};
-
-const convertPersistedPriceHistoryToPriceHistoryResponse = (
-  persistedPriceHistory
-) => {
-  return {
-    price: persistedPriceHistory.price,
-    trackedDate: persistedPriceHistory.trackedDate,
-  };
 };
 
 module.exports = {
@@ -269,10 +230,4 @@ module.exports = {
   updatePriceHistories: updatePriceHistories,
   updateSellers: updateSellers,
   setTrackedDate: setTrackedDate,
-  convertPersistedProductModelToProductResponse:
-    convertPersistedProductModelToProductResponse,
-  convertPersistedSellerToSellerResponse:
-    convertPersistedSellerToSellerResponse,
-  convertPersistedPriceHistoryToPriceHistoryResponse:
-    convertPersistedPriceHistoryToPriceHistoryResponse,
 };

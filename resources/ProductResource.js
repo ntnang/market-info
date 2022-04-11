@@ -25,11 +25,7 @@ app.get("/api/:origin/product/:itemId", (req, res) => {
       res.status(500).send(err);
     }
     if (product) {
-      res
-        .status(200)
-        .send(
-          ProductService.convertPersistedProductModelToProductResponse(product)
-        );
+      res.status(200).send(product);
     } else {
       res.status(404).send("Product not found");
     }
@@ -45,13 +41,7 @@ app.get("/api/product/latest", (_, res) => {
         res.status(500).send(err);
       }
       if (lastTrackedProduct) {
-        res
-          .status(200)
-          .send(
-            ProductService.convertPersistedProductModelToProductResponse(
-              lastTrackedProduct
-            )
-          );
+        res.status(200).send(lastTrackedProduct);
       } else {
         res.status(404).send("Last tracked product not found");
       }
@@ -64,15 +54,7 @@ app.get("/api/products", (_, res) => {
       console.error(err);
       res.status(500).send(err);
     } else {
-      res
-        .status(200)
-        .send(
-          Array.from(products, (product) =>
-            ProductService.convertPersistedProductModelToProductResponse(
-              product
-            )
-          )
-        );
+      res.status(200).send(products);
     }
   });
 });
