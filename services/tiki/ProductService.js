@@ -176,7 +176,7 @@ const getSellersMetadata = (item) => {
 const getProductConfigurations = (product, options) => {
   const configurations = [];
   options.forEach((option) => {
-    configurations.push({ name: option.name, value: product[option.code] });
+    configurations.push({ option: option.name, value: product[option.code] });
   });
   return configurations;
 };
