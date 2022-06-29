@@ -66,13 +66,15 @@ const getProduct = (id) => {
       return product;
     })
     .then((product) => {
-      const allPrices = product.variants.flatMap((variant) =>
+      const allPrices = product.variants?.flatMap((variant) =>
         variant.sellers.flatMap((seller) =>
           seller.priceHistories.map((priceHistory) => priceHistory.price)
         )
       );
-      product.minPrice = Math.min(...allPrices);
-      product.maxPrice = Math.max(...allPrices);
+      if (allPrices) {
+        product.minPrice = Math.min(...allPrices);
+        product.maxPrice = Math.max(...allPrices);
+      }
       return product;
     });
 };
@@ -84,10 +86,13 @@ const convertToProductModel = (item) => {
     thumbnailUrl: item.thumbnail_url,
     imagesUrls: item.images.map((image) => image.base_url),
     origin: ProductOrigin.TIKI_VN,
+    minPrice: item.price,
+    maxPrice: item.price,
     options: getConfigurableOptions(item),
-    variants: item.configurable_products
-      ? getConfigurableProducts(item)
-      : getSimpleProduct(item),
+    variants:
+      item.type === "configurable"
+        ? getConfigurableProducts(item)
+        : getSimpleProduct(item),
     sellers: getSellersMetadata(item),
     lastTrackedDate: null,
   };
@@ -115,7 +120,7 @@ const getSimpleProduct = (item) => {
 };
 
 const getConfigurableProducts = (item) => {
-  return item.configurable_products.map((product) => ({
+  return item.configurable_products?.map((product) => ({
     id: product.id,
     name: product.name,
     imagesUrls: product.images.map((image) => image.large_url),
@@ -138,7 +143,7 @@ const getConfigurableProductsSellers = (product) => {
 
 const getConfigurableProductsOtherSellers = (item) => {
   return Promise.all(
-    item.other_sellers.map((seller) => {
+    item.other_sellers?.map((seller) => {
       return TikiRestClient.fetchConfigurableProducts(
         item.id,
         seller.product_id
@@ -148,11 +153,15 @@ const getConfigurableProductsOtherSellers = (item) => {
 };
 
 const getSellersPrices = (item) => {
-  const currentSellerPrice = {
-    id: item.current_seller.id.toString(),
-    priceHistories: [{ price: item.current_seller.price, trackedDate: null }],
-  };
-  const otherSellerPrices = item.other_sellers.map((seller) => ({
+  const currentSellerPrice = item.current_seller
+    ? {
+        id: item.current_seller.id.toString(),
+        priceHistories: [
+          { price: item.current_seller.price, trackedDate: null },
+        ],
+      }
+    : null;
+  const otherSellerPrices = item.other_sellers?.map((seller) => ({
     id: seller.id.toString(),
     priceHistories: [{ price: seller.price, trackedDate: null }],
   }));
@@ -160,12 +169,14 @@ const getSellersPrices = (item) => {
 };
 
 const getSellersMetadata = (item) => {
-  const currentSellerMetadata = {
-    id: item.current_seller.id.toString(),
-    name: item.current_seller.name,
-    logoUrl: item.current_seller.logo,
-  };
-  const otherSellerMetadata = item.other_sellers.map((seller) => ({
+  const currentSellerMetadata = item.current_seller
+    ? {
+        id: item.current_seller.id.toString(),
+        name: item.current_seller.name,
+        logoUrl: item.current_seller.logo,
+      }
+    : null;
+  const otherSellerMetadata = item.other_sellers?.map((seller) => ({
     id: seller.id.toString(),
     name: seller.name,
     logoUrl: seller.logo,

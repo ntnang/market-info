@@ -83,7 +83,7 @@ const updateSellers = (fetchedProduct, persistedProduct) => {
 
 const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
   const fetchedVariants = fetchedProduct.variants;
-  const fetchedVariantIds = fetchedVariants.map((variant) => variant.id);
+  const fetchedVariantIds = fetchedVariants?.map((variant) => variant.id);
 
   const persistedVariants = persistedProduct.variants;
   const persistedVariantIds = persistedVariants.map((variant) => variant.id);
@@ -93,15 +93,16 @@ const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
     persistedVariantIds
   );
   persistedProduct.variants.push(
-    fetchedVariants.filter((variant) => newVariantIds.includes(variant.id))
+    fetchedVariants?.filter((variant) => newVariantIds.includes(variant.id))
   );
 
   const suspendedVariantIds = LodashArray.difference(
     persistedVariantIds,
     fetchedVariantIds
   );
+
   persistedVariants
-    .filter((variant) => suspendedVariantIds.includes(variant.id))
+    .filter((variant) => suspendedVariantIds.includes(variant?.id))
     .forEach((variant) =>
       variant.sellers.forEach((seller) =>
         seller.priceHistories.push({
@@ -116,7 +117,7 @@ const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
     persistedVariantIds
   );
   const isPriceChanged = fetchedVariants
-    .filter((variant) => stillOnSaleVariantIds.includes(variant.id))
+    ?.filter((variant) => stillOnSaleVariantIds.includes(variant.id))
     .map((fetchedVariant) => {
       const persistedVariant = persistedVariants.filter(
         (variant) => variant.id === fetchedVariant.id
