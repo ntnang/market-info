@@ -4,7 +4,11 @@ const TikiProductService = require("./tiki/ProductService");
 const ShopeeProductService = require("./shopee/ProductService");
 
 const fetchProduct = (origin, itemId, shopId) => {
-  if (origin == ProductOrigin.TIKI_VN) {
+  if (!origin || !itemId || !shopId) {
+    return new Promise((resolve, _) => {
+      resolve(null);
+    });
+  } else if (origin == ProductOrigin.TIKI_VN) {
     return TikiProductService.getProduct(itemId);
   } else if (origin == ProductOrigin.SHOPEE_VN) {
     return ShopeeProductService.getProduct(itemId, shopId);
