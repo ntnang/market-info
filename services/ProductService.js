@@ -20,11 +20,14 @@ const fetchProduct = (origin, itemId, shopId) => {
 };
 
 const checkProductChanges = (persistedProduct) => {
-  fetchProduct(
+  return fetchProduct(
     persistedProduct.origin,
     persistedProduct.id,
     persistedProduct.sellers[0].id
   ).then((fetchedProduct) => {
+    if (!fetchedProduct) {
+      return false;
+    }
     const currentDateTime = new Date();
     const isChanged = updateVariants(
       fetchedProduct,
@@ -35,6 +38,7 @@ const checkProductChanges = (persistedProduct) => {
       persistedProduct.lastTrackedDate = currentDateTime;
     }
     persistedProduct.save();
+    return isChanged;
   });
 };
 
@@ -96,9 +100,14 @@ const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
     fetchedVariantIds,
     persistedVariantIds
   );
-  persistedProduct.variants.push(
-    fetchedVariants?.filter((variant) => newVariantIds.includes(variant.id))
-  );
+
+  if (fetchedVariants) {
+    fetchedVariants
+      .filter((variant) => newVariantIds.includes(variant.id))
+      .forEach((v) => {
+        persistedVariants.push(v);
+      });
+  }
 
   const suspendedVariantIds = LodashArray.difference(
     persistedVariantIds,
