@@ -7,7 +7,7 @@ const ProductService = require("./services/ProductService");
 const Product = require("./models/Product");
 
 const PORT = 3001;
-const TRACKING_INTERVAL = 3600000; // One hour
+const TRACKING_INTERVAL = 3000; // One hour
 
 app.use(cors());
 app.use(express.json());
@@ -24,10 +24,16 @@ dbConnection.once("open", () => {
 });
 
 setInterval(() => {
-  console.log("TRACKING...");
   Product.find({}, (err, products) => {
-    products.forEach((product) => {
-      ProductService.checkProductChanges(product);
+    console.log("------------------- START TRACKING -------------------");
+    products.forEach(async (product) => {
+      const currentDateTime = new Date();
+      const isChanged = await ProductService.checkProductChanges(product);
+      console.log(
+        `[${currentDateTime}][${product.origin}][${product.id}] ${
+          isChanged ? "changed" : "not changed"
+        }`
+      );
     });
     if (err) console.error(err);
   });
