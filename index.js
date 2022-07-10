@@ -7,7 +7,7 @@ const ProductService = require("./services/ProductService");
 const Product = require("./models/Product");
 
 const PORT = 3001;
-const TRACKING_INTERVAL = 3000; // One hour
+const TRACKING_INTERVAL = 3600000; // One hour
 
 app.use(cors());
 app.use(express.json());
