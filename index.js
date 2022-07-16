@@ -15,7 +15,7 @@ app.use(ProductResource);
 
 // mongodb://localhost/market-info
 mongoose.connect(
-  "mongodb+srv://admin:4ipskeUb9KaE0BvA@cluster0.odwl3.mongodb.net/?retryWrites=true&w=majority",
+  "mongodb+srv://admin:4ipskeUb9KaE0BvA@cluster0.odwl3.mongodb.net/admin?retryWrites=true&w=majority",
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
