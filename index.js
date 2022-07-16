@@ -13,10 +13,14 @@ app.use(cors());
 app.use(express.json());
 app.use(ProductResource);
 
-mongoose.connect("mongodb://localhost/market-info", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// mongodb://localhost/market-info
+mongoose.connect(
+  "mongodb+srv://admin:4ipskeUb9KaE0BvA@cluster0.odwl3.mongodb.net/?retryWrites=true&w=majority",
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }
+);
 const dbConnection = mongoose.connection;
 dbConnection.on("error", console.error.bind(console, "connection error:"));
 dbConnection.once("open", () => {
