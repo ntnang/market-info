@@ -6,21 +6,18 @@ const ProductResource = require("./resources/ProductResource");
 const ProductService = require("./services/ProductService");
 const Product = require("./models/Product");
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const TRACKING_INTERVAL = 3600000; // One hour
 
 app.use(cors());
 app.use(express.json());
 app.use(ProductResource);
 
-// mongodb://localhost/market-info
-mongoose.connect(
-  "mongodb+srv://admin:4ipskeUb9KaE0BvA@cluster0.odwl3.mongodb.net/admin?retryWrites=true&w=majority",
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
-);
+// mongodb+srv://admin:4ipskeUb9KaE0BvA@cluster0.odwl3.mongodb.net/nang?retryWrites=true&w=majority
+mongoose.connect(process.env.DB_CONN_STR || "mongodb://localhost/market-info", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 const dbConnection = mongoose.connection;
 dbConnection.on("error", console.error.bind(console, "connection error:"));
 dbConnection.once("open", () => {
