@@ -32,7 +32,7 @@ app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}...`);
 
   const opts = {
-    interval: 60,
+    interval: 29,
     logging: true,
     stopTimes: { start: "00:00", end: "06:00" },
   };
