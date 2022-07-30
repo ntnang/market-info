@@ -197,9 +197,7 @@ const updatePriceHistories = (
   });
 
   openSellerIds.forEach((sellerId) => {
-    const newSeller = fetchedSellers.get.filter(
-      (seller) => seller.id === sellerId
-    );
+    const newSeller = fetchedSellers.find((seller) => seller.id === sellerId);
     persistedSellers.push({
       id: sellerId,
       name: newSeller.name,
