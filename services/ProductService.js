@@ -138,11 +138,12 @@ const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
     fetchedVariantIds,
     persistedVariantIds
   );
+
   const isPriceChanged = fetchedVariants
-    ?.filter((variant) => stillOnSaleVariantIds.includes(variant.id))
+    ?.filter((variant) => stillOnSaleVariantIds.includes(variant.id.toString()))
     .map((fetchedVariant) => {
-      const persistedVariant = persistedVariants.filter(
-        (variant) => variant.id === fetchedVariant.id
+      const persistedVariant = persistedVariants.find(
+        (variant) => variant.id == fetchedVariant.id
       );
       return updatePriceHistories(
         fetchedVariant,
@@ -178,14 +179,13 @@ const updatePriceHistories = (
   const closedSellerIds = persistedSellerIds.filter(
     (sellerId) => !fetchedSellerIds.includes(sellerId)
   );
-
   ongoingSellerIds.forEach((sellerId) => {
-    const priceHistories = persistedSellers.filter(
-      (seller) => seller.id === sellerId
+    const priceHistories = persistedSellers.find(
+      (seller) => seller.id == sellerId
     ).priceHistories;
     const lastPriceHistory = priceHistories[priceHistories.length - 1];
-    const newPriceHistory = fetchedSellers.filter(
-      (seller) => seller.id === sellerId
+    const newPriceHistory = fetchedSellers.find(
+      (seller) => seller.id == sellerId
     ).priceHistories[0];
     if (newPriceHistory.price !== lastPriceHistory.price) {
       priceHistories.push({

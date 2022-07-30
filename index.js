@@ -10,7 +10,6 @@ const Product = require("./models/Product");
 const PORT = process.env.PORT || 3001;
 const DB_CONN_STR =
   process.env.DB_CONN_STR || "mongodb://localhost/market-info";
-const TRACKING_INTERVAL = process.env.TRACKING_INTERVAL || 3600000;
 
 app.use(cors());
 app.use(express.json());
