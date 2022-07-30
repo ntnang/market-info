@@ -27,7 +27,9 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-setInterval(() => {
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}...`);
+
   Product.find({}, (err, products) => {
     console.log("------------------- START TRACKING -------------------");
     products.forEach(async (product) => {
@@ -41,14 +43,4 @@ setInterval(() => {
     });
     if (err) console.error(err);
   });
-}, TRACKING_INTERVAL);
-
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}...`);
-
-  const opts = {
-    interval: 29,
-    logging: true,
-    stopTimes: { start: "00:00", end: "06:00" },
-  };
 });
