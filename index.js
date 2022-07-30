@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { wakeDyno } = require("heroku-keep-awake");
 
 const ProductResource = require("./resources/ProductResource");
 const ProductService = require("./services/ProductService");
@@ -11,7 +10,7 @@ const Product = require("./models/Product");
 const PORT = process.env.PORT || 3001;
 const DB_CONN_STR =
   process.env.DB_CONN_STR || "mongodb://localhost/market-info";
-const DYNO_URL = "https://ecomtrax-be.herokuapp.com";
+const TRACKING_INTERVAL = process.env.TRACKING_INTERVAL || 3600000;
 
 app.use(cors());
 app.use(express.json());
@@ -28,17 +27,7 @@ dbConnection.once("open", () => {
   console.log("db connection opened");
 });
 
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}...`);
-
-  const opts = {
-    interval: 29,
-    logging: true,
-    stopTimes: { start: "00:00", end: "06:00" },
-  };
-
-  wakeDyno(DYNO_URL, opts);
-
+setInterval(() => {
   Product.find({}, (err, products) => {
     console.log("------------------- START TRACKING -------------------");
     products.forEach(async (product) => {
@@ -52,4 +41,14 @@ app.listen(PORT, () => {
     });
     if (err) console.error(err);
   });
+}, TRACKING_INTERVAL);
+
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}...`);
+
+  const opts = {
+    interval: 29,
+    logging: true,
+    stopTimes: { start: "00:00", end: "06:00" },
+  };
 });
