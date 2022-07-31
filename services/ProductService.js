@@ -165,7 +165,7 @@ const updatePriceHistories = (
   let anySellerPriceChanged = false;
 
   const fetchedSellers = fetchedVariant.sellers;
-  const fetchedSellerIds = fetchedSellers.map((seller) => seller.id);
+  const fetchedSellerIds = fetchedSellers.map((seller) => seller.id.toString());
 
   const persistedSellers = persistedVariant.sellers;
   const persistedSellerIds = persistedSellers.map((seller) => seller.id);
@@ -197,7 +197,7 @@ const updatePriceHistories = (
   });
 
   openSellerIds.forEach((sellerId) => {
-    const newSeller = fetchedSellers.find((seller) => seller.id === sellerId);
+    const newSeller = fetchedSellers.find((seller) => seller.id == sellerId);
     persistedSellers.push({
       id: sellerId,
       name: newSeller.name,
@@ -213,7 +213,7 @@ const updatePriceHistories = (
 
   closedSellerIds.forEach((sellerId) => {
     persistedSellers
-      .filter((seller) => seller.id === sellerId)
+      .find((seller) => seller.id == sellerId)
       .priceHistories.push({
         price: null,
         trackedDate: currentDateTime,
