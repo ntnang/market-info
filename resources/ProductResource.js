@@ -3,6 +3,10 @@ const app = express();
 const ProductService = require("../services/ProductService");
 const Product = require("../models/Product");
 
+app.head("/", (_, res) => {
+  res.status(200).send();
+});
+
 app.get("/api/:origin/product/current-info/:itemId/:shopId?", (req, res) => {
   ProductService.fetchProduct(
     req.params.origin,
