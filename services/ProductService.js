@@ -37,6 +37,8 @@ const checkProductChanges = (persistedProduct) => {
     if (isChanged) {
       persistedProduct.lastTrackedDate = currentDateTime;
     }
+    updateProductMetadata(fetchedProduct, persistedProduct);
+    updateSellers(fetchedProduct, persistedProduct);
     persistedProduct.save();
     return isChanged;
   });
@@ -51,19 +53,21 @@ const updateProductMetadata = (fetchedProduct, persistedProduct) => {
 
   const newOptions = LodashArray.difference(
     fetchedProduct.options.map((option) => option.name),
-    persisted.options.map((option) => option.name)
+    persistedProduct.options.map((option) => option.name)
   );
 
-  persistedProduct.options.push(
-    fetchProduct.options.filter((option) => newOptions.includes(option.name))
-  );
+  fetchedProduct.options
+    .filter((option) => newOptions.includes(option.name))
+    .forEach((option) => {
+      persistedProduct.options.push(option);
+    });
 
   persistedProduct.options.forEach((persistedOption) =>
     LodashArray.union(
       persistedOption.values,
-      fetchProduct.options.find(
+      fetchedProduct.options.find(
         (fetchedOption) => fetchedOption.name === persistedOption.name
-      ).values
+      )?.values
     )
   );
 };
@@ -75,7 +79,9 @@ const updateVariantMetadata = (fetchedVariant, persistedVariant) => {
 
 const updateSellers = (fetchedProduct, persistedProduct) => {
   const fetchedSellers = fetchedProduct.sellers;
-  const fetchedSellerIds = fetchedSellers.map((seller) => seller.id);
+  const fetchedSellerIds = fetchedSellers
+    .filter((seller) => !!seller)
+    .map((seller) => seller.id);
 
   const persistedSellers = persistedProduct.sellers;
   const persistedSellerIds = persistedSellers.map((seller) => seller.id);
@@ -84,9 +90,12 @@ const updateSellers = (fetchedProduct, persistedProduct) => {
     fetchedSellerIds,
     persistedSellerIds
   );
-  persistedSellers.push(
-    fetchedSellers.filter((seller) => newSellerIds.includes(seller.id))
-  );
+  fetchedSellers
+    .filter((seller) => !!seller)
+    .filter((seller) => newSellerIds.includes(seller.id))
+    .forEach((seller) => {
+      persistedSellers.push(seller);
+    });
 };
 
 const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
@@ -118,8 +127,16 @@ const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
 
   persistedVariants
     .filter((variant) => suspendedVariantIds.includes(variant?.id))
-    .forEach((variant) =>
-      variant.sellers.forEach((seller) => {
+    .forEach((persistedVariant) =>
+      persistedVariant.sellers.forEach((seller) => {
+        if (fetchedVariants) {
+          updateVariantMetadata(
+            fetchedVariants.find(
+              (fetchedVariant) => fetchedVariant.id === persistedVariant.id
+            ),
+            persistedVariant
+          );
+        }
         if (seller.priceHistories[seller.priceHistories.length - 1].price) {
           seller.priceHistories.push({
             price: null,
@@ -128,7 +145,7 @@ const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
         } else {
           suspendedVariantIds = LodashArray.without(
             suspendedVariantIds,
-            variant.id
+            persistedVariant.id
           );
         }
       })
@@ -145,6 +162,7 @@ const updateVariants = (fetchedProduct, persistedProduct, currentDateTime) => {
       const persistedVariant = persistedVariants.find(
         (variant) => variant.id == fetchedVariant.id
       );
+      updateVariantMetadata(fetchedVariant, persistedVariant);
       return updatePriceHistories(
         fetchedVariant,
         persistedVariant,
